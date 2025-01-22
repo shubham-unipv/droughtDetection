@@ -76,8 +76,8 @@ def load_data(district):
     dfs = []
     for year in range(2016, 2022):  # Loop through the relevant years
         # Define filenames for both current and previous year's data
-        current_file = f"timeSeriesData/TimeSeries_{district}_{year}.csv"
-        previous_file = f"timeSeriesData/TimeSeries_{district}_{year-1}.csv"
+        current_file = f"WithAgriculturalMask/timeSeriesData/TimeSeries_{district}_{year}.csv"
+        previous_file = f"WithAgriculturalMask/timeSeriesData/TimeSeries_{district}_{year-1}.csv"
         
         # Initialize an empty DataFrame for the current season
         season_df = pd.DataFrame()
@@ -136,7 +136,7 @@ for district in districts:
     data = pd.concat([data, district_data], ignore_index=True)
 
 # Save to CSV
-file_path = 'ResultsBordaCount/output_file.csv'
+file_path = 'WithAgriculturalMask/ResultsBordaCount/output_file.csv'
 data.to_csv(file_path, index=False)
 
 # Shuffle data
@@ -199,12 +199,12 @@ explainer = shap.TreeExplainer(xgb_model)
 shap_values = explainer.shap_values(X_test)
 # Save SHAP summary plot as an image file
 shap.summary_plot(shap_values, X_test, plot_type="bar", feature_names=X_test.columns)
-plt.savefig("ResultsBordaCount/shap_summary_bar_plot_xgb.png")  # Save plot to file
+plt.savefig("WithAgriculturalMask/ResultsBordaCount/shap_summary_bar_plot_xgb.png")  # Save plot to file
 plt.clf()  # Clear the current plot
 
 # Save the SHAP summary plot as an image
 shap.summary_plot(shap_values, X_test, feature_names=X_test.columns)
-plt.savefig("ResultsBordaCount/shap_summary_plot_xgb.png")  # Save plot to file
+plt.savefig("WithAgriculturalMask/ResultsBordaCount/shap_summary_plot_xgb.png")  # Save plot to file
 plt.clf()  # Clear the current plot
 
 ## *****************************************************************************************************************##
@@ -235,12 +235,12 @@ shap_values_rf_drought = shap_values_rf[:, :, 1]
 
 # Plot SHAP summary plot as a bar chart to show feature importance
 shap.summary_plot(shap_values_rf_drought, X_test, plot_type="bar", feature_names=X_test.columns)
-plt.savefig("ResultsBordaCount/shap_summary_bar_plot_rf.png")  # Save plot to file
+plt.savefig("WithAgriculturalMask/ResultsBordaCount/shap_summary_bar_plot_rf.png")  # Save plot to file
 plt.clf()  # Clear the current plot
 
 # Plot the full SHAP summary plot to visualize feature impact on individual predictions
 shap.summary_plot(shap_values_rf_drought, X_test, feature_names=X_test.columns)
-plt.savefig("ResultsBordaCount/shap_summary_plot_rf.png")  # Save plot to file
+plt.savefig("WithAgriculturalMask/ResultsBordaCount/shap_summary_plot_rf.png")  # Save plot to file
 plt.clf()  # Clear the current plot
 
 ## *****************************************************************************************************************##
@@ -267,12 +267,12 @@ shap_values_bagging = explainer_bagging.shap_values(X_test)
 
 # Plot SHAP summary plot as a bar chart for feature importance
 shap.summary_plot(shap_values_bagging, X_test, plot_type="bar", feature_names=X_test.columns)
-plt.savefig("ResultsBordaCount/shap_summary_bar_plot_bagging.png")  # Save bar plot to file
+plt.savefig("WithAgriculturalMask/ResultsBordaCount/shap_summary_bar_plot_bagging.png")  # Save bar plot to file
 plt.clf()  # Clear the current plot
 
 # Plot the full SHAP summary plot to visualize feature impact on individual predictions
 shap.summary_plot(shap_values_bagging, X_test, feature_names=X_test.columns)
-plt.savefig("ResultsBordaCount/shap_summary_plot_bagging.png")  # Save beeswarm plot to file
+plt.savefig("WithAgriculturalMask/ResultsBordaCount/shap_summary_plot_bagging.png")  # Save beeswarm plot to file
 plt.clf()  # Clear the current plot
 
 ## *****************************************************************************************************************##
@@ -296,12 +296,12 @@ shap_values_gb = explainer_gb.shap_values(X_test)
 
 # Save SHAP summary plot as an image file for Gradient Boosting
 shap.summary_plot(shap_values_gb, X_test, plot_type="bar", feature_names=X_test.columns)
-plt.savefig("ResultsBordaCount/shap_summary_bar_plot_gb.png")  # Save plot to file
+plt.savefig("WithAgriculturalMask/ResultsBordaCount/shap_summary_bar_plot_gb.png")  # Save plot to file
 plt.clf()  # Clear the current plot
 
 # Save the SHAP summary plot as an image for Gradient Boosting
 shap.summary_plot(shap_values_gb, X_test, feature_names=X_test.columns)
-plt.savefig("ResultsBordaCount/shap_summary_plot_gb.png")  # Save plot to file
+plt.savefig("WithAgriculturalMask/ResultsBordaCount/shap_summary_plot_gb.png")  # Save plot to file
 plt.clf()  # Clear the current plot
 ## *****************************************************************************************************************##
 
@@ -352,7 +352,7 @@ plt.gca().invert_yaxis()  # Invert the y-axis to display the top feature on top
 plt.tight_layout()
 
 # Save the plot
-plt.savefig("ResultsBordaCount/top_5_features_borda_count.png")
+plt.savefig("WithAgriculturalMask/ResultsBordaCount/top_5_features_borda_count.png")
 plt.clf()  # Clear the plot
 
 ## *****************************************************************************************************************##
@@ -401,7 +401,7 @@ plt.figure(figsize=(12, 6))
 plt.axis('off')
 plt.table(cellText=metrics_df.values, colLabels=metrics_df.columns, rowLabels=metrics_df.index, loc='center', cellLoc='center', bbox=[0, 0, 1, 1])
 plt.tight_layout()
-plt.savefig("ResultsBordaCount/model_metrics_top_features_borda_count.png")
+plt.savefig("WithAgriculturalMask/ResultsBordaCount/model_metrics_top_features_borda_count.png")
 plt.clf()
 
 # Print the metrics for verification
@@ -422,7 +422,7 @@ def plot_confusion_matrix(y_true, y_pred, model_name):
     plt.xlabel('Predicted')
     plt.ylabel('True')
     plt.tight_layout()
-    plt.savefig(f"ResultsBordaCount/confusion_matrix_{model_name.lower().replace(' ', '_')}.png")  # Save confusion matrix as an image
+    plt.savefig(f"WithAgriculturalMask/ResultsBordaCount/confusion_matrix_{model_name.lower().replace(' ', '_')}.png")  # Save confusion matrix as an image
     plt.clf()  # Clear the current plot
 
 # Evaluate and perform error analysis for each model
