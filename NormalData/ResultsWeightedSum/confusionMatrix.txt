@@ -1,0 +1,16 @@
+Confusion Matrix for XGBoost:
+[[234  70]
+ [ 37 535]]
+
+Confusion Matrix for Random Forest:
+[[219  85]
+ [ 27 545]]
+
+Confusion Matrix for Bagging:
+[[238  66]
+ [ 37 535]]
+
+Confusion Matrix for Gradient Boosting:
+[[179 125]
+ [ 42 530]]
+

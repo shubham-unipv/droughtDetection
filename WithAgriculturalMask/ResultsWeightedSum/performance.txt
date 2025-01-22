@@ -1,0 +1,16 @@
+XGBoost Accuracy (Rabi Crop): 87.19%
+XGBoost Precision: 88.87%
+XGBoost Recall: 92.59%
+
+Random Forest Accuracy (Rabi Crop): 86.43%
+Random Forest Precision: 86.69%
+Random Forest Recall: 94.36%
+
+Bagging Classifier Accuracy (Rabi Crop): 88.38%
+Bagging Classifier Precision: 88.82%
+Bagging Classifier Recall: 94.69%
+
+Gradient Boosting Accuracy (Rabi Crop): 81.11%
+Gradient Boosting Precision: 80.91%
+Gradient Boosting Recall: 94.20%
+

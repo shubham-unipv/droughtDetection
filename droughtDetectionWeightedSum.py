@@ -135,6 +135,12 @@ for district in districts:
     district_data = load_data(district)
     data = pd.concat([data, district_data], ignore_index=True)
 
+# Vectors to store metrics
+model_names = []
+accuracies = []
+precisions = []
+recalls = []
+
 # Save to CSV
 file_path = 'WithAgriculturalMask/ResultsWeightedSum/output_file.csv'
 data.to_csv(file_path, index=False)
@@ -181,15 +187,20 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 ## *****************************************************************************************************************##
 
 ### XGBoost Classifier ###
+
+model_names.append('XGBoost')
 xgb_model = XGBClassifier(random_state=42)
 xgb_model.fit(X_train, y_train)
 y_pred_xgb = xgb_model.predict(X_test)
 accuracy_xgb = accuracy_score(y_test, y_pred_xgb)
+accuracies.append(accuracy_xgb)
 print(f"XGBoost Accuracy (Rabi Crop): {accuracy_xgb * 100:.2f}%")
 
 # Calculate Precision and Recall for XGBoost
 precision_xgb = precision_score(y_test, y_pred_xgb, pos_label=1)  # Use 1 for drought
 recall_xgb = recall_score(y_test, y_pred_xgb, pos_label=1)
+precisions.append(precision_xgb)
+recalls.append(recall_xgb)
 
 print(f"XGBoost Precision: {precision_xgb * 100:.2f}%")
 print(f"XGBoost Recall: {recall_xgb * 100:.2f}%")
@@ -211,16 +222,20 @@ plt.clf()  # Clear the current plot
 ## *****************************************************************************************************************##
 
 ### Random Forest Classifier ###
+model_names.append('Random Forest')
 rf = RandomForestClassifier(n_estimators=200, random_state=42)
 rf.fit(X_train, y_train)
 y_pred_rf = rf.predict(X_test)
 accuracy_rf = accuracy_score(y_test, y_pred_rf)
+accuracies.append(accuracy_rf)
 print(f"Random Forest Accuracy (Rabi Crop): {accuracy_rf * 100:.2f}%")
 
 # Calculate Precision and Recall for Random Forest
 precision_rf = precision_score(y_test, y_pred_rf, pos_label=1)  # Use 1 for drought
 recall_rf = recall_score(y_test, y_pred_rf, pos_label=1)
 
+precisions.append(precision_rf)
+recalls.append(recall_rf)
 print(f"Random Forest Precision: {precision_rf * 100:.2f}%")
 print(f"Random Forest Recall: {recall_rf * 100:.2f}%")
 
@@ -247,16 +262,20 @@ plt.clf()  # Clear the current plot
 ## *****************************************************************************************************************##
 
 # Bagging Classifier
+model_names.append('Bagging')
 bagging = BaggingClassifier(n_estimators=100, random_state=42)
 bagging.fit(X_train, y_train)
 y_pred_bagging = bagging.predict(X_test)
 accuracy_bagging = accuracy_score(y_test, y_pred_bagging)
+accuracies.append(accuracy_bagging)
 print(f"Bagging Classifier Accuracy (Rabi Crop): {accuracy_bagging * 100:.2f}%")
 
 # Calculate Precision and Recall for Bagging Classifier
 precision_bagging = precision_score(y_test, y_pred_bagging, pos_label=1)  # Use 1 for drought
 recall_bagging = recall_score(y_test, y_pred_bagging, pos_label=1)
 
+precisions.append(precision_bagging)
+recalls.append(recall_bagging)
 print(f"Bagging Classifier Precision: {precision_bagging * 100:.2f}%")
 print(f"Bagging Classifier Recall: {recall_bagging * 100:.2f}%")
 
@@ -279,16 +298,20 @@ plt.clf()  # Clear the current plot
 ## *****************************************************************************************************************##
 
 ### Gradient Boosting Classifier ###
+model_names.append('Gradient Boosting')
 gb = GradientBoostingClassifier(random_state=42)
 gb.fit(X_train, y_train)
 y_pred_gb = gb.predict(X_test)
 accuracy_gb = accuracy_score(y_test, y_pred_gb)
+accuracies.append(accuracy_gb)
 print(f"Gradient Boosting Accuracy (Rabi Crop): {accuracy_gb * 100:.2f}%")
 
 # Calculate Precision and Recall for Gradient Boosting
 precision_gb = precision_score(y_test, y_pred_gb, pos_label=1)  # Use 1 for drought
 recall_gb = recall_score(y_test, y_pred_gb, pos_label=1)
 
+precisions.append(precision_gb)
+recalls.append(recall_gb)
 print(f"Gradient Boosting Precision: {precision_gb * 100:.2f}%")
 print(f"Gradient Boosting Recall: {recall_gb * 100:.2f}%")
 
@@ -305,7 +328,24 @@ plt.clf()  # Clear the current plot
 shap.summary_plot(shap_values_gb, X_test, feature_names=X_test.columns)
 plt.savefig("WithAgriculturalMask/ResultsWeightedSum/shap_summary_plot_gb.png")  # Save plot to file
 plt.clf()  # Clear the current plot
+## *****************************************************************************************************************##
+# Create a DataFrame with the metrics
+metrics_df1 = pd.DataFrame({
+    'Model': model_names,
+    'Accuracy': accuracies,
+    'Precision': precisions,
+    'Recall': recalls
+})
 
+# Create a table plot
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.axis('tight')
+ax.axis('off')
+table = ax.table(cellText=metrics_df1.values, colLabels=metrics_df1.columns, cellLoc='center', loc='center')
+
+# Save the table as a PNG image
+plt.savefig('WithAgriculturalMask/ResultsWeightedSum/model_performance_table.png')
+plt.clf()  # Clear the current plot
 ## *****************************************************************************************************************##
 
 # Get SHAP values for each model
@@ -426,6 +466,8 @@ import seaborn as sns
 # Function to plot confusion matrix and save as an image
 def plot_confusion_matrix(y_true, y_pred, model_name):
     cm = confusion_matrix(y_true, y_pred)
+    print(f"Confusion Matrix for {model_name}:\n{cm}\n")  # Print the confusion matrix
+
     plt.figure(figsize=(6, 5))
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=['No Drought (0)', 'Drought (1)'], yticklabels=['No Drought (0)', 'Drought (1)'])
     plt.title(f'Confusion Matrix: {model_name}')
