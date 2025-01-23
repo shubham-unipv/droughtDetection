@@ -64,7 +64,24 @@ drought_labels = {
     'Thanjavur': {2016: 0, 2017: 1, 2018: 0, 2019: 1, 2020: 0, 2021: 0}
 }
 
+#(90%)
+drought_labels = {
+    'Jodhpur': {2016: 1, 2017: 0, 2018: 1, 2019: 1, 2020: 0, 2021: 1},
+    'Amravati': {2016: 1, 2017: 1, 2018: 1, 2019: 1, 2020: 0, 2021: 1},
+    'Thanjavur': {2016: 0, 2017: 1, 2018: 0, 2019: 1, 2020: 0, 2021: 0}
+}
+
+
+# Dictionary for drought-affected years (1 for drought, 0 for no drought).
+# Using the IMD reports with using SPI average from (Oct - May). New:: Made with Jit.  
+drought_labels = {
+    'Jodhpur': {2016: , 2017: , 2018: , 2019: , 2020: , 2021: },
+    'Amravati': {2016: , 2017: , 2018: , 2019: , 2020: , 2021: },
+    'Thanjavur': {2016: , 2017: , 2018: , 2019: , 2020: , 2021: }
+}
+
 """
+performance_output_file = "NormalData/ResultsWeightedSum/performance.txt"
 
 # Last Try to do it again(87%)
 drought_labels = {
@@ -76,8 +93,8 @@ def load_data(district):
     dfs = []
     for year in range(2016, 2022):  # Loop through the relevant years
         # Define filenames for both current and previous year's data
-        current_file = f"WithAgriculturalMask/timeSeriesData/TimeSeries_{district}_{year}.csv"
-        previous_file = f"WithAgriculturalMask/timeSeriesData/TimeSeries_{district}_{year-1}.csv"
+        current_file = f"NormalData/timeSeriesData/TimeSeries_{district}_{year}.csv"
+        previous_file = f"NormalData/timeSeriesData/TimeSeries_{district}_{year-1}.csv"
         
         # Initialize an empty DataFrame for the current season
         season_df = pd.DataFrame()
@@ -142,28 +159,40 @@ precisions = []
 recalls = []
 
 # Save to CSV
-file_path = 'WithAgriculturalMask/ResultsWeightedSum/output_file.csv'
+file_path = 'NormalData/ResultsWeightedSum/output_file.csv'
 data.to_csv(file_path, index=False)
 
 # Shuffle data
 data = data.sample(frac=1, random_state=42).reset_index(drop=True)
 
 # Define features (remote sensing indices) and target (drought affected or not)
-X = data.drop(columns=['SeasonYear','Drought', 'Year', 'Month', 'District'])  # Features
+X = data
+
+#X = data.drop(columns=['SeasonYear','Drought', 'Year', 'Month', 'District'])  # Features
 y = data['Drought']  # Target
 
 # Save the column names before scaling
 column_names = X.columns
 
-# Normalize the data
+# Define the columns to be normalized (first 12 features)
+features_to_normalize = X.columns[:12]
+
+# Normalize the first 12 features. 
+# The rest of the features remain unchanged
 scaler = MinMaxScaler()
-X = scaler.fit_transform(X)
+X[features_to_normalize] = scaler.fit_transform(X[features_to_normalize])
 
 # Convert back to a pandas DataFrame with the correct column names
 X = pd.DataFrame(X, columns=column_names)
 
 # Split the data into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+X_train_copy = X_train.copy()
+X_test_copy = X_test.copy()
+
+X_train = X_train.drop(columns=['SeasonYear','Drought', 'Year', 'Month', 'District'])  # Features
+X_test = X_test.drop(columns=['SeasonYear','Drought', 'Year', 'Month', 'District'])  # Features
 
 # Handle class imbalance with SMOTEENN
 # Note: SMOTEENN is working better than below commented BorderlineSMOTE.
@@ -205,18 +234,102 @@ recalls.append(recall_xgb)
 print(f"XGBoost Precision: {precision_xgb * 100:.2f}%")
 print(f"XGBoost Recall: {recall_xgb * 100:.2f}%")
 
+with open(performance_output_file, "w") as f:
+    f.write("XGBoost Results\n")
+    f.write("===============================\n")
+    f.write(f"XGBoost Accuracy (Rabi Crop): {accuracy_xgb * 100:.2f}% \n")
+    f.write(f"XGBoost Precision: {precision_xgb * 100:.2f}% \n")
+    f.write(f"XGBoost Recall: {recall_xgb * 100:.2f}% \n\n")
+
+# Convert predictions to a DataFrame
+results_df = X_test_copy
+results_df["Actual_Label"] = y_test
+results_df["Predicted_Label"] = y_pred_xgb
+
+# Group by district and year
+grouped_results = results_df.groupby(["District", "SeasonYear"])
+
+# Prepare the output file
+output_file = "NormalData/ResultsBordaCount/xgboost_test_results.txt"
+correct_groups = 0
+total_groups = len(grouped_results)
+
+with open(output_file, "w") as f:
+    for (district, seasonYear), group in grouped_results:
+        f.write(f"District: {district}, SeasonYear: {seasonYear} \n")
+        f.write(f"Total Test Cases: {len(group)}\n")
+       
+        # Perform voting on the predicted labels
+        predicted_counts = group['Predicted_Label'].value_counts()
+        count_0 = predicted_counts.get(0, 0)
+        count_1 = predicted_counts.get(1, 0)
+
+         # Determine the majority prediction
+        majority_prediction = 1 if count_1 >= count_0 else 0
+
+        # Check if the majority prediction matches the actual label
+        actual_label = group['Actual_Label'].mode()[0]
+        if majority_prediction == actual_label:
+            f.write("Group Detected Correctly\n")
+            correct_groups += 1
+        else:
+            f.write("Group Detected Wrongly\n")
+
+        # Write the voting results
+        f.write(f"Predicted 0: {count_0}, Predicted 1: {count_1}\n")
+
+        f.write("Actual vs Predicted:\n")
+        for idx, row in group.iterrows():
+            f.write(f"Actual: {row['Actual_Label']}, Predicted: {row['Predicted_Label']}\n")
+        f.write("\n")
+
+# Calculate accuracy, precision, and recall for the groups
+accuracy = correct_groups / total_groups
+precision = correct_groups / (correct_groups + (total_groups - correct_groups))
+recall = correct_groups / total_groups
+
+# Save the overall results to the file
+with open(output_file, "w") as f:
+    f.write("Overall Group Detection Results\n")
+    f.write("===============================\n")
+    f.write(f"Total Groups: {total_groups}\n")
+    f.write(f"Correctly Detected Groups: {correct_groups}\n")
+    f.write(f"Accuracy: {accuracy:.4f}\n")
+    f.write(f"Precision: {precision:.4f}\n")
+    f.write(f"Recall: {recall:.4f}\n")
+
+with open(performance_output_file, "a") as f:
+    f.write("Overall Group Detection Results\n")
+    f.write("===============================\n")
+    f.write(f"Total Groups: {total_groups}\n")
+    f.write(f"Correctly Detected Groups: {correct_groups}\n")
+    f.write(f"Accuracy: {accuracy:.4f}\n")
+    f.write(f"Precision: {precision:.4f}\n")
+    f.write(f"Recall: {recall:.4f}\n\n")
+
+# Print the overall results to the console
+print("Overall Group Detection Results")
+print("===============================")
+print(f"Total Groups: {total_groups}")
+print(f"Correctly Detected Groups: {correct_groups}")
+print(f"Accuracy: {accuracy:.4f}")
+print(f"Precision: {precision:.4f}")
+print(f"Recall: {recall:.4f}")
+
+print(f"Results saved to {output_file}")
+
 # SHAP Analysis for XGBoost
 explainer = shap.TreeExplainer(xgb_model)
 shap_values = explainer.shap_values(X_test)
 
 # Save SHAP summary plot as an image file
 shap.summary_plot(shap_values, X_test, plot_type="bar", feature_names=X_test.columns)
-plt.savefig("WithAgriculturalMask/ResultsWeightedSum/shap_summary_bar_plot_xgb.png")  # Save plot to file
+plt.savefig("NormalData/ResultsWeightedSum/shap_summary_bar_plot_xgb.png")  # Save plot to file
 plt.clf()  # Clear the current plot
 
 # Save the SHAP summary plot as an image
 shap.summary_plot(shap_values, X_test, feature_names=X_test.columns)
-plt.savefig("WithAgriculturalMask/ResultsWeightedSum/shap_summary_plot_xgb.png")  # Save plot to file
+plt.savefig("NormalData/ResultsWeightedSum/shap_summary_plot_xgb.png")  # Save plot to file
 plt.clf()  # Clear the current plot
 
 ## *****************************************************************************************************************##
@@ -239,6 +352,84 @@ recalls.append(recall_rf)
 print(f"Random Forest Precision: {precision_rf * 100:.2f}%")
 print(f"Random Forest Recall: {recall_rf * 100:.2f}%")
 
+with open(performance_output_file, "a") as f:
+    f.write("Random Forest Results\n")
+    f.write("===============================\n")
+    f.write(f"Random Forest Accuracy (Rabi Crop): {accuracy_rf * 100:.2f}% \n")
+    f.write(f"Random Forest Precision: {precision_rf * 100:.2f}% \n")
+    f.write(f"Random Forest Recall: {recall_rf * 100:.2f}% \n\n")
+
+
+# Prepare the output file
+results_df["Predicted_Label"] = y_pred_rf
+output_file = "NormalData/ResultsBordaCount/rf_test_results.txt"
+correct_groups = 0
+total_groups = len(grouped_results)
+
+with open(output_file, "w") as f:
+    for (district, seasonYear), group in grouped_results:
+        f.write(f"District: {district}, SeasonYear: {seasonYear} \n")
+        f.write(f"Total Test Cases: {len(group)}\n")
+       
+        # Perform voting on the predicted labels
+        predicted_counts = group['Predicted_Label'].value_counts()
+        count_0 = predicted_counts.get(0, 0)
+        count_1 = predicted_counts.get(1, 0)
+
+         # Determine the majority prediction
+        majority_prediction = 1 if count_1 >= count_0 else 0
+
+        # Check if the majority prediction matches the actual label
+        actual_label = group['Actual_Label'].mode()[0]
+        if majority_prediction == actual_label:
+            f.write("Group Detected Correctly\n")
+            correct_groups += 1
+        else:
+            f.write("Group Detected Wrongly\n")
+
+        # Write the voting results
+        f.write(f"Predicted 0: {count_0}, Predicted 1: {count_1}\n")
+
+        f.write("Actual vs Predicted:\n")
+        for idx, row in group.iterrows():
+            f.write(f"Actual: {row['Actual_Label']}, Predicted: {row['Predicted_Label']}\n")
+        f.write("\n")
+
+# Calculate accuracy, precision, and recall for the groups
+accuracy = correct_groups / total_groups
+precision = correct_groups / (correct_groups + (total_groups - correct_groups))
+recall = correct_groups / total_groups
+
+# Save the overall results to the file
+with open(output_file, "a") as f:
+    f.write("Overall Group Detection Results\n")
+    f.write("===============================\n")
+    f.write(f"Total Groups: {total_groups}\n")
+    f.write(f"Correctly Detected Groups: {correct_groups}\n")
+    f.write(f"Accuracy: {accuracy:.4f}\n")
+    f.write(f"Precision: {precision:.4f}\n")
+    f.write(f"Recall: {recall:.4f}\n")
+
+with open(performance_output_file, "a") as f:
+    f.write("Overall Group Detection Results\n")
+    f.write("===============================\n")
+    f.write(f"Total Groups: {total_groups}\n")
+    f.write(f"Correctly Detected Groups: {correct_groups}\n")
+    f.write(f"Accuracy: {accuracy:.4f}\n")
+    f.write(f"Precision: {precision:.4f}\n")
+    f.write(f"Recall: {recall:.4f}\n\n")
+
+# Print the overall results to the console
+print("Overall Group Detection Results")
+print("===============================")
+print(f"Total Groups: {total_groups}")
+print(f"Correctly Detected Groups: {correct_groups}")
+print(f"Accuracy: {accuracy:.4f}")
+print(f"Precision: {precision:.4f}")
+print(f"Recall: {recall:.4f}")
+
+print(f"Results saved to {output_file}")
+
 # SHAP Analysis with TreeExplainer for Random Forest
 explainer_rf = shap.TreeExplainer(rf)  # 'rf' is your trained Random Forest model
 shap_values_rf = explainer_rf.shap_values(X_test)
@@ -251,12 +442,12 @@ shap_values_rf_drought = shap_values_rf[:, :, 1]
 
 # Plot SHAP summary plot as a bar chart to show feature importance
 shap.summary_plot(shap_values_rf_drought, X_test, plot_type="bar", feature_names=X_test.columns)
-plt.savefig("WithAgriculturalMask/ResultsWeightedSum/shap_summary_bar_plot_rf.png")  # Save plot to file
+plt.savefig("NormalData/ResultsWeightedSum/shap_summary_bar_plot_rf.png")  # Save plot to file
 plt.clf()  # Clear the current plot
 
 # Plot the full SHAP summary plot to visualize feature impact on individual predictions
 shap.summary_plot(shap_values_rf_drought, X_test, feature_names=X_test.columns)
-plt.savefig("WithAgriculturalMask/ResultsWeightedSum/shap_summary_plot_rf.png")  # Save plot to file
+plt.savefig("NormalData/ResultsWeightedSum/shap_summary_plot_rf.png")  # Save plot to file
 plt.clf()  # Clear the current plot
 
 ## *****************************************************************************************************************##
@@ -279,7 +470,85 @@ recalls.append(recall_bagging)
 print(f"Bagging Classifier Precision: {precision_bagging * 100:.2f}%")
 print(f"Bagging Classifier Recall: {recall_bagging * 100:.2f}%")
 
+with open(performance_output_file, "a") as f:
+    f.write("Results\n")
+    f.write("===============================\n")
+    f.write(f"Bagging Classifier Accuracy (Rabi Crop): {accuracy_bagging * 100:.2f}% \n")
+    f.write(f"Bagging Classifier Precision: {precision_bagging * 100:.2f}% \n")
+    f.write(f"Bagging Classifier Recall: {recall_bagging * 100:.2f}% \n\n")
+
 print("Base estimator used in Bagging Classifier:", bagging.base_estimator_)
+
+
+# Prepare the output file
+results_df["Predicted_Label"] = y_pred_bagging
+output_file = "NormalData/ResultsBordaCount/bagging_test_results.txt"
+correct_groups = 0
+total_groups = len(grouped_results)
+
+with open(output_file, "w") as f:
+    for (district, seasonYear), group in grouped_results:
+        f.write(f"District: {district}, SeasonYear: {seasonYear} \n")
+        f.write(f"Total Test Cases: {len(group)}\n")
+       
+        # Perform voting on the predicted labels
+        predicted_counts = group['Predicted_Label'].value_counts()
+        count_0 = predicted_counts.get(0, 0)
+        count_1 = predicted_counts.get(1, 0)
+
+         # Determine the majority prediction
+        majority_prediction = 1 if count_1 >= count_0 else 0
+
+        # Check if the majority prediction matches the actual label
+        actual_label = group['Actual_Label'].mode()[0]
+        if majority_prediction == actual_label:
+            f.write("Group Detected Correctly\n")
+            correct_groups += 1
+        else:
+            f.write("Group Detected Wrongly\n")
+
+        # Write the voting results
+        f.write(f"Predicted 0: {count_0}, Predicted 1: {count_1}\n")
+
+        f.write("Actual vs Predicted:\n")
+        for idx, row in group.iterrows():
+            f.write(f"Actual: {row['Actual_Label']}, Predicted: {row['Predicted_Label']}\n")
+        f.write("\n")
+
+# Calculate accuracy, precision, and recall for the groups
+accuracy = correct_groups / total_groups
+precision = correct_groups / (correct_groups + (total_groups - correct_groups))
+recall = correct_groups / total_groups
+
+# Save the overall results to the file
+with open(output_file, "a") as f:
+    f.write("Overall Group Detection Results\n")
+    f.write("===============================\n")
+    f.write(f"Total Groups: {total_groups}\n")
+    f.write(f"Correctly Detected Groups: {correct_groups}\n")
+    f.write(f"Accuracy: {accuracy:.4f}\n")
+    f.write(f"Precision: {precision:.4f}\n")
+    f.write(f"Recall: {recall:.4f}\n")
+
+with open(performance_output_file, "a") as f:
+    f.write("Overall Group Detection Results\n")
+    f.write("===============================\n")
+    f.write(f"Total Groups: {total_groups}\n")
+    f.write(f"Correctly Detected Groups: {correct_groups}\n")
+    f.write(f"Accuracy: {accuracy:.4f}\n")
+    f.write(f"Precision: {precision:.4f}\n")
+    f.write(f"Recall: {recall:.4f}\n\n")
+
+# Print the overall results to the console
+print("Overall Group Detection Results")
+print("===============================")
+print(f"Total Groups: {total_groups}")
+print(f"Correctly Detected Groups: {correct_groups}")
+print(f"Accuracy: {accuracy:.4f}")
+print(f"Precision: {precision:.4f}")
+print(f"Recall: {recall:.4f}")
+
+print(f"Results saved to {output_file}")
 
 # Use PermutationExplainer for the BaggingClassifier
 explainer_bagging = shap.PermutationExplainer(bagging.predict, X_test)
@@ -287,12 +556,12 @@ shap_values_bagging = explainer_bagging.shap_values(X_test)
 
 # Plot SHAP summary plot as a bar chart for feature importance
 shap.summary_plot(shap_values_bagging, X_test, plot_type="bar", feature_names=X_test.columns)
-plt.savefig("WithAgriculturalMask/ResultsWeightedSum/shap_summary_bar_plot_bagging.png")  # Save bar plot to file
+plt.savefig("NormalData/ResultsWeightedSum/shap_summary_bar_plot_bagging.png")  # Save bar plot to file
 plt.clf()  # Clear the current plot
 
 # Plot the full SHAP summary plot to visualize feature impact on individual predictions
 shap.summary_plot(shap_values_bagging, X_test, feature_names=X_test.columns)
-plt.savefig("WithAgriculturalMask/ResultsWeightedSum/shap_summary_plot_bagging.png")  # Save beeswarm plot to file
+plt.savefig("NormalData/ResultsWeightedSum/shap_summary_plot_bagging.png")  # Save beeswarm plot to file
 plt.clf()  # Clear the current plot
 
 ## *****************************************************************************************************************##
@@ -315,18 +584,95 @@ recalls.append(recall_gb)
 print(f"Gradient Boosting Precision: {precision_gb * 100:.2f}%")
 print(f"Gradient Boosting Recall: {recall_gb * 100:.2f}%")
 
+with open(performance_output_file, "a") as f:
+    f.write("Gradient Boosting Results\n")
+    f.write("===============================\n")
+    f.write(f"Gradient Boosting Accuracy (Rabi Crop): {accuracy_gb * 100:.2f}% \n")
+    f.write(f"Gradient Boosting Precision: {precision_gb * 100:.2f}% \n")
+    f.write(f"Gradient Boosting Recall: {recall_gb * 100:.2f}% \n\n")
+
+# Prepare the output file
+results_df["Predicted_Label"] = y_pred_gb
+output_file = "NormalData/ResultsBordaCount/gb_test_results.txt"
+correct_groups = 0
+total_groups = len(grouped_results)
+
+with open(output_file, "w") as f:
+    for (district, seasonYear), group in grouped_results:
+        f.write(f"District: {district}, SeasonYear: {seasonYear} \n")
+        f.write(f"Total Test Cases: {len(group)}\n")
+       
+        # Perform voting on the predicted labels
+        predicted_counts = group['Predicted_Label'].value_counts()
+        count_0 = predicted_counts.get(0, 0)
+        count_1 = predicted_counts.get(1, 0)
+
+         # Determine the majority prediction
+        majority_prediction = 1 if count_1 >= count_0 else 0
+
+        # Check if the majority prediction matches the actual label
+        actual_label = group['Actual_Label'].mode()[0]
+        if majority_prediction == actual_label:
+            f.write("Group Detected Correctly\n")
+            correct_groups += 1
+        else:
+            f.write("Group Detected Wrongly\n")
+
+        # Write the voting results
+        f.write(f"Predicted 0: {count_0}, Predicted 1: {count_1}\n")
+
+        f.write("Actual vs Predicted:\n")
+        for idx, row in group.iterrows():
+            f.write(f"Actual: {row['Actual_Label']}, Predicted: {row['Predicted_Label']}\n")
+        f.write("\n")
+
+# Calculate accuracy, precision, and recall for the groups
+accuracy = correct_groups / total_groups
+precision = correct_groups / (correct_groups + (total_groups - correct_groups))
+recall = correct_groups / total_groups
+
+# Save the overall results to the file
+with open(output_file, "a") as f:
+    f.write("Overall Group Detection Results\n")
+    f.write("===============================\n")
+    f.write(f"Total Groups: {total_groups}\n")
+    f.write(f"Correctly Detected Groups: {correct_groups}\n")
+    f.write(f"Accuracy: {accuracy:.4f}\n")
+    f.write(f"Precision: {precision:.4f}\n")
+    f.write(f"Recall: {recall:.4f}\n")
+
+with open(performance_output_file, "a") as f:
+    f.write("Overall Group Detection Results\n")
+    f.write("===============================\n")
+    f.write(f"Total Groups: {total_groups}\n")
+    f.write(f"Correctly Detected Groups: {correct_groups}\n")
+    f.write(f"Accuracy: {accuracy:.4f}\n")
+    f.write(f"Precision: {precision:.4f}\n")
+    f.write(f"Recall: {recall:.4f}\n\n")
+
+# Print the overall results to the console
+print("Overall Group Detection Results")
+print("===============================")
+print(f"Total Groups: {total_groups}")
+print(f"Correctly Detected Groups: {correct_groups}")
+print(f"Accuracy: {accuracy:.4f}")
+print(f"Precision: {precision:.4f}")
+print(f"Recall: {recall:.4f}")
+
+print(f"Results saved to {output_file}")
+
 # SHAP Analysis for Gradient Boosting
 explainer_gb = shap.TreeExplainer(gb)
 shap_values_gb = explainer_gb.shap_values(X_test)
 
 # Save SHAP summary plot as an image file for Gradient Boosting
 shap.summary_plot(shap_values_gb, X_test, plot_type="bar", feature_names=X_test.columns)
-plt.savefig("WithAgriculturalMask/ResultsWeightedSum/shap_summary_bar_plot_gb.png")  # Save plot to file
+plt.savefig("NormalData/ResultsWeightedSum/shap_summary_bar_plot_gb.png")  # Save plot to file
 plt.clf()  # Clear the current plot
 
 # Save the SHAP summary plot as an image for Gradient Boosting
 shap.summary_plot(shap_values_gb, X_test, feature_names=X_test.columns)
-plt.savefig("WithAgriculturalMask/ResultsWeightedSum/shap_summary_plot_gb.png")  # Save plot to file
+plt.savefig("NormalData/ResultsWeightedSum/shap_summary_plot_gb.png")  # Save plot to file
 plt.clf()  # Clear the current plot
 ## *****************************************************************************************************************##
 # Create a DataFrame with the metrics
@@ -344,7 +690,7 @@ ax.axis('off')
 table = ax.table(cellText=metrics_df1.values, colLabels=metrics_df1.columns, cellLoc='center', loc='center')
 
 # Save the table as a PNG image
-plt.savefig('WithAgriculturalMask/ResultsWeightedSum/model_performance_table.png')
+plt.savefig('NormalData/ResultsWeightedSum/model_performance_table.png')
 plt.clf()  # Clear the current plot
 ## *****************************************************************************************************************##
 
@@ -402,7 +748,7 @@ plt.gca().invert_yaxis()  # Invert the y-axis to display the top feature on top
 plt.tight_layout()
 
 # Save the plot
-plt.savefig("WithAgriculturalMask/ResultsWeightedSum/top_5_features_weighted_sum.png")
+plt.savefig("NormalData/ResultsWeightedSum/top_5_features_weighted_sum.png")
 plt.clf()  # Clear the plot
 
 ## *****************************************************************************************************************##
@@ -451,7 +797,7 @@ plt.figure(figsize=(12, 6))
 plt.axis('off')
 plt.table(cellText=metrics_df.values, colLabels=metrics_df.columns, rowLabels=metrics_df.index, loc='center', cellLoc='center', bbox=[0, 0, 1, 1])
 plt.tight_layout()
-plt.savefig("WithAgriculturalMask/ResultsWeightedSum/model_metrics_top_features_weighted_sum.png")
+plt.savefig("NormalData/ResultsWeightedSum/model_metrics_top_features_weighted_sum.png")
 plt.clf()
 
 # Print the metrics for verification
@@ -463,10 +809,13 @@ print(metrics_df)
 from sklearn.metrics import confusion_matrix
 import seaborn as sns
 
+f = open(performance_output_file, "a")
+
 # Function to plot confusion matrix and save as an image
 def plot_confusion_matrix(y_true, y_pred, model_name):
     cm = confusion_matrix(y_true, y_pred)
     print(f"Confusion Matrix for {model_name}:\n{cm}\n")  # Print the confusion matrix
+    f.write(f"Confusion Matrix for {model_name}:\n{cm}\n")  
 
     plt.figure(figsize=(6, 5))
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=['No Drought (0)', 'Drought (1)'], yticklabels=['No Drought (0)', 'Drought (1)'])
@@ -474,7 +823,7 @@ def plot_confusion_matrix(y_true, y_pred, model_name):
     plt.xlabel('Predicted')
     plt.ylabel('True')
     plt.tight_layout()
-    plt.savefig(f"WithAgriculturalMask/ResultsWeightedSum/confusion_matrix_{model_name.lower().replace(' ', '_')}.png")  # Save confusion matrix as an image
+    plt.savefig(f"NormalData/ResultsWeightedSum/confusion_matrix_{model_name.lower().replace(' ', '_')}.png")  # Save confusion matrix as an image
     plt.clf()  # Clear the current plot
 
 # Evaluate and perform error analysis for each model
@@ -499,4 +848,4 @@ for model_name, model in models.items():
     # Plot confusion matrix and save as an image
     plot_confusion_matrix(y_test, y_pred, model_name)
     
-
+f.close()
