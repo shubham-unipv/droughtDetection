@@ -250,7 +250,7 @@ results_df["Predicted_Label"] = y_pred_xgb
 grouped_results = results_df.groupby(["District", "SeasonYear"])
 
 # Prepare the output file
-output_file = "NormalData/ResultsBordaCount/xgboost_test_results.txt"
+output_file = "NormalData/ResultsWeightedSum/xgboost_test_results.txt"
 correct_groups = 0
 total_groups = len(grouped_results)
 
@@ -362,7 +362,7 @@ with open(performance_output_file, "a") as f:
 
 # Prepare the output file
 results_df["Predicted_Label"] = y_pred_rf
-output_file = "NormalData/ResultsBordaCount/rf_test_results.txt"
+output_file = "NormalData/ResultsWeightedSum/rf_test_results.txt"
 correct_groups = 0
 total_groups = len(grouped_results)
 
@@ -482,7 +482,7 @@ print("Base estimator used in Bagging Classifier:", bagging.base_estimator_)
 
 # Prepare the output file
 results_df["Predicted_Label"] = y_pred_bagging
-output_file = "NormalData/ResultsBordaCount/bagging_test_results.txt"
+output_file = "NormalData/ResultsWeightedSum/bagging_test_results.txt"
 correct_groups = 0
 total_groups = len(grouped_results)
 
@@ -593,7 +593,7 @@ with open(performance_output_file, "a") as f:
 
 # Prepare the output file
 results_df["Predicted_Label"] = y_pred_gb
-output_file = "NormalData/ResultsBordaCount/gb_test_results.txt"
+output_file = "NormalData/ResultsWeightedSum/gb_test_results.txt"
 correct_groups = 0
 total_groups = len(grouped_results)
 
