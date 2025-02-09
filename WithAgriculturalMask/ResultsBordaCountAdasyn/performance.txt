@@ -1,0 +1,68 @@
+XGBoost Results
+===============================
+XGBoost Accuracy (Rabi Crop): 84.26% 
+XGBoost Precision: 78.59% 
+XGBoost Recall: 82.69% 
+
+Overall Group Detection Results
+===============================
+Total Groups: 18
+Correctly Detected Groups: 18
+Accuracy: 1.0000
+Precision: 1.0000
+Recall: 1.0000
+
+Random Forest Results
+===============================
+Random Forest Accuracy (Rabi Crop): 84.26% 
+Random Forest Precision: 78.29% 
+Random Forest Recall: 83.24% 
+
+Overall Group Detection Results
+===============================
+Total Groups: 18
+Correctly Detected Groups: 18
+Accuracy: 1.0000
+Precision: 1.0000
+Recall: 1.0000
+
+Results
+===============================
+Bagging Classifier Accuracy (Rabi Crop): 83.28% 
+Bagging Classifier Precision: 78.07% 
+Bagging Classifier Recall: 80.22% 
+
+Overall Group Detection Results
+===============================
+Total Groups: 18
+Correctly Detected Groups: 18
+Accuracy: 1.0000
+Precision: 1.0000
+Recall: 1.0000
+
+Gradient Boosting Results
+===============================
+Gradient Boosting Accuracy (Rabi Crop): 71.77% 
+Gradient Boosting Precision: 61.76% 
+Gradient Boosting Recall: 75.00% 
+
+Overall Group Detection Results
+===============================
+Total Groups: 18
+Correctly Detected Groups: 16
+Accuracy: 0.8889
+Precision: 0.8889
+Recall: 0.8889
+
+Confusion Matrix for XGBoost:
+[[475  82]
+ [ 63 301]]
+Confusion Matrix for Random Forest:
+[[473  84]
+ [ 61 303]]
+Confusion Matrix for Bagging:
+[[475  82]
+ [ 72 292]]
+Confusion Matrix for Gradient Boosting:
+[[388 169]
+ [ 91 273]]
