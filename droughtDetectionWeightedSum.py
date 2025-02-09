@@ -87,7 +87,7 @@ drought_labels = {
 }
 
 """
-performance_output_file = "WithAgriculturalMask/ResultsWeightedSumAdasyn/performance.txt"
+performance_output_file = "WithAgriculturalMask/ResultsWeighted/performance.txt"
 
 # Dictionary for drought-affected years (1 for drought, 0 for no drought).
 # Using newspaper and other government reports with Jit.
@@ -167,7 +167,7 @@ precisions = []
 recalls = []
 
 # Save to CSV
-file_path = 'WithAgriculturalMask/ResultsWeightedSumAdasyn/output_file.csv'
+file_path = 'WithAgriculturalMask/ResultsWeighted/output_file.csv'
 data.to_csv(file_path, index=False)
 
 # Shuffle data
@@ -218,8 +218,8 @@ X_test = X_test.drop(columns=['SeasonYear','Drought', 'Year', 'Month', 'District
 #X_train, y_train = pipeline.fit_resample(X_train, y_train)
 
 # Handle class imbalance with ADASYN
-adasyn = ADASYN(random_state=42)
-X_train, y_train = adasyn.fit_resample(X_train, y_train)
+#adasyn = ADASYN(random_state=42)
+#X_train, y_train = adasyn.fit_resample(X_train, y_train)
 
 ## *****************************************************************************************************************##
 
@@ -258,7 +258,7 @@ results_df["Predicted_Label"] = y_pred_xgb
 grouped_results = results_df.groupby(["District", "SeasonYear"])
 
 # Prepare the output file
-output_file = "WithAgriculturalMask/ResultsWeightedSumAdasyn/xgboost_test_results.txt"
+output_file = "WithAgriculturalMask/ResultsWeighted/xgboost_test_results.txt"
 correct_groups = 0
 total_groups = len(grouped_results)
 
@@ -332,12 +332,12 @@ shap_values = explainer.shap_values(X_test)
 
 # Save SHAP summary plot as an image file
 shap.summary_plot(shap_values, X_test, plot_type="bar", feature_names=X_test.columns)
-plt.savefig("WithAgriculturalMask/ResultsWeightedSumAdasyn/shap_summary_bar_plot_xgb.png")  # Save plot to file
+plt.savefig("WithAgriculturalMask/ResultsWeighted/shap_summary_bar_plot_xgb.png")  # Save plot to file
 plt.clf()  # Clear the current plot
 
 # Save the SHAP summary plot as an image
 shap.summary_plot(shap_values, X_test, feature_names=X_test.columns)
-plt.savefig("WithAgriculturalMask/ResultsWeightedSumAdasyn/shap_summary_plot_xgb.png")  # Save plot to file
+plt.savefig("WithAgriculturalMask/ResultsWeighted/shap_summary_plot_xgb.png")  # Save plot to file
 plt.clf()  # Clear the current plot
 
 ## *****************************************************************************************************************##
@@ -370,7 +370,7 @@ with open(performance_output_file, "a") as f:
 
 # Prepare the output file
 results_df["Predicted_Label"] = y_pred_rf
-output_file = "WithAgriculturalMask/ResultsWeightedSumAdasyn/rf_test_results.txt"
+output_file = "WithAgriculturalMask/ResultsWeighted/rf_test_results.txt"
 correct_groups = 0
 total_groups = len(grouped_results)
 
@@ -450,12 +450,12 @@ shap_values_rf_drought = shap_values_rf[:, :, 1]
 
 # Plot SHAP summary plot as a bar chart to show feature importance
 shap.summary_plot(shap_values_rf_drought, X_test, plot_type="bar", feature_names=X_test.columns)
-plt.savefig("WithAgriculturalMask/ResultsWeightedSumAdasyn/shap_summary_bar_plot_rf.png")  # Save plot to file
+plt.savefig("WithAgriculturalMask/ResultsWeighted/shap_summary_bar_plot_rf.png")  # Save plot to file
 plt.clf()  # Clear the current plot
 
 # Plot the full SHAP summary plot to visualize feature impact on individual predictions
 shap.summary_plot(shap_values_rf_drought, X_test, feature_names=X_test.columns)
-plt.savefig("WithAgriculturalMask/ResultsWeightedSumAdasyn/shap_summary_plot_rf.png")  # Save plot to file
+plt.savefig("WithAgriculturalMask/ResultsWeighted/shap_summary_plot_rf.png")  # Save plot to file
 plt.clf()  # Clear the current plot
 
 ## *****************************************************************************************************************##
@@ -490,7 +490,7 @@ print("Base estimator used in Bagging Classifier:", bagging.base_estimator_)
 
 # Prepare the output file
 results_df["Predicted_Label"] = y_pred_bagging
-output_file = "WithAgriculturalMask/ResultsWeightedSumAdasyn/bagging_test_results.txt"
+output_file = "WithAgriculturalMask/ResultsWeighted/bagging_test_results.txt"
 correct_groups = 0
 total_groups = len(grouped_results)
 
@@ -564,12 +564,12 @@ shap_values_bagging = explainer_bagging.shap_values(X_test)
 
 # Plot SHAP summary plot as a bar chart for feature importance
 shap.summary_plot(shap_values_bagging, X_test, plot_type="bar", feature_names=X_test.columns)
-plt.savefig("WithAgriculturalMask/ResultsWeightedSumAdasyn/shap_summary_bar_plot_bagging.png")  # Save bar plot to file
+plt.savefig("WithAgriculturalMask/ResultsWeighted/shap_summary_bar_plot_bagging.png")  # Save bar plot to file
 plt.clf()  # Clear the current plot
 
 # Plot the full SHAP summary plot to visualize feature impact on individual predictions
 shap.summary_plot(shap_values_bagging, X_test, feature_names=X_test.columns)
-plt.savefig("WithAgriculturalMask/ResultsWeightedSumAdasyn/shap_summary_plot_bagging.png")  # Save beeswarm plot to file
+plt.savefig("WithAgriculturalMask/ResultsWeighted/shap_summary_plot_bagging.png")  # Save beeswarm plot to file
 plt.clf()  # Clear the current plot
 
 ## *****************************************************************************************************************##
@@ -601,7 +601,7 @@ with open(performance_output_file, "a") as f:
 
 # Prepare the output file
 results_df["Predicted_Label"] = y_pred_gb
-output_file = "WithAgriculturalMask/ResultsWeightedSumAdasyn/gb_test_results.txt"
+output_file = "WithAgriculturalMask/ResultsWeighted/gb_test_results.txt"
 correct_groups = 0
 total_groups = len(grouped_results)
 
@@ -675,12 +675,12 @@ shap_values_gb = explainer_gb.shap_values(X_test)
 
 # Save SHAP summary plot as an image file for Gradient Boosting
 shap.summary_plot(shap_values_gb, X_test, plot_type="bar", feature_names=X_test.columns)
-plt.savefig("WithAgriculturalMask/ResultsWeightedSumAdasyn/shap_summary_bar_plot_gb.png")  # Save plot to file
+plt.savefig("WithAgriculturalMask/ResultsWeighted/shap_summary_bar_plot_gb.png")  # Save plot to file
 plt.clf()  # Clear the current plot
 
 # Save the SHAP summary plot as an image for Gradient Boosting
 shap.summary_plot(shap_values_gb, X_test, feature_names=X_test.columns)
-plt.savefig("WithAgriculturalMask/ResultsWeightedSumAdasyn/shap_summary_plot_gb.png")  # Save plot to file
+plt.savefig("WithAgriculturalMask/ResultsWeighted/shap_summary_plot_gb.png")  # Save plot to file
 plt.clf()  # Clear the current plot
 ## *****************************************************************************************************************##
 # Create a DataFrame with the metrics
@@ -698,7 +698,7 @@ ax.axis('off')
 table = ax.table(cellText=metrics_df1.values, colLabels=metrics_df1.columns, cellLoc='center', loc='center')
 
 # Save the table as a PNG image
-plt.savefig('WithAgriculturalMask/ResultsWeightedSumAdasyn/model_performance_table.png')
+plt.savefig('WithAgriculturalMask/ResultsWeighted/model_performance_table.png')
 plt.clf()  # Clear the current plot
 ## *****************************************************************************************************************##
 
@@ -756,7 +756,7 @@ plt.gca().invert_yaxis()  # Invert the y-axis to display the top feature on top
 plt.tight_layout()
 
 # Save the plot
-plt.savefig("WithAgriculturalMask/ResultsWeightedSumAdasyn/top_5_features_weighted_sum.png")
+plt.savefig("WithAgriculturalMask/ResultsWeighted/top_5_features_weighted_sum.png")
 plt.clf()  # Clear the plot
 
 ## *****************************************************************************************************************##
@@ -805,7 +805,7 @@ plt.figure(figsize=(12, 6))
 plt.axis('off')
 plt.table(cellText=metrics_df.values, colLabels=metrics_df.columns, rowLabels=metrics_df.index, loc='center', cellLoc='center', bbox=[0, 0, 1, 1])
 plt.tight_layout()
-plt.savefig("WithAgriculturalMask/ResultsWeightedSumAdasyn/model_metrics_top_features_weighted_sum.png")
+plt.savefig("WithAgriculturalMask/ResultsWeighted/model_metrics_top_features_weighted_sum.png")
 plt.clf()
 
 # Print the metrics for verification
@@ -831,7 +831,7 @@ def plot_confusion_matrix(y_true, y_pred, model_name):
     plt.xlabel('Predicted')
     plt.ylabel('True')
     plt.tight_layout()
-    plt.savefig(f"WithAgriculturalMask/ResultsWeightedSumAdasyn/confusion_matrix_{model_name.lower().replace(' ', '_')}.png")  # Save confusion matrix as an image
+    plt.savefig(f"WithAgriculturalMask/ResultsWeighted/confusion_matrix_{model_name.lower().replace(' ', '_')}.png")  # Save confusion matrix as an image
     plt.clf()  # Clear the current plot
 
 # Evaluate and perform error analysis for each model
