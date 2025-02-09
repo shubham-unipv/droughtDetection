@@ -73,28 +73,36 @@ drought_labels = {
 
 
 # Dictionary for drought-affected years (1 for drought, 0 for no drought).
-# Using the IMD reports with using SPI average from (Oct - May). New:: Made with Jit.  
+# Using newspaper and other government reports with Jit.
 drought_labels = {
-    'Jodhpur': {2016: , 2017: , 2018: , 2019: , 2020: , 2021: },
-    'Amravati': {2016: , 2017: , 2018: , 2019: , 2020: , 2021: },
-    'Thanjavur': {2016: , 2017: , 2018: , 2019: , 2020: , 2021: }
+    'Jodhpur': {2016: 1, 2017: 0, 2018: 0, 2019: 1, 2020: 1, 2021:0 },
+    'Amravati': {2016: 1, 2017: 0, 2018: 0, 2019: 1, 2020: 0, 2021:0 },
+    'Thanjavur': {2016: 0, 2017: 1, 2018: 0, 2019: 1, 2020: 0, 2021:0 }
 }
-
-"""
-performance_output_file = "NormalData/ResultsWeightedSum/performance.txt"
-
 # Last Try to do it again(87%)
 drought_labels = {
     'Jodhpur': {2016: 1, 2017: 0, 2018: 1, 2019: 1, 2020: 0, 2021: 1},
     'Amravati': {2016: 1, 2017: 1, 2018: 1, 2019: 1, 2020: 0, 2021: 1},
     'Thanjavur': {2016: 0, 2017: 1, 2018: 0, 2019: 1, 2020: 0, 2021: 0}
 }
+
+"""
+performance_output_file = "WithAgriculturalMask/ResultsWeightedSum/performance.txt"
+
+# Dictionary for drought-affected years (1 for drought, 0 for no drought).
+# Using newspaper and other government reports with Jit.
+drought_labels = {
+    'Jodhpur': {2016: 1, 2017: 0, 2018: 0, 2019: 1, 2020: 1, 2021:0 },
+    'Amravati': {2016: 1, 2017: 0, 2018: 0, 2019: 1, 2020: 0, 2021:0 },
+    'Thanjavur': {2016: 0, 2017: 1, 2018: 0, 2019: 1, 2020: 0, 2021:0 }
+}
+
 def load_data(district):
     dfs = []
     for year in range(2016, 2022):  # Loop through the relevant years
         # Define filenames for both current and previous year's data
-        current_file = f"NormalData/timeSeriesData/TimeSeries_{district}_{year}.csv"
-        previous_file = f"NormalData/timeSeriesData/TimeSeries_{district}_{year-1}.csv"
+        current_file = f"WithAgriculturalMask/timeSeriesData/TimeSeries_{district}_{year}.csv"
+        previous_file = f"WithAgriculturalMask/timeSeriesData/TimeSeries_{district}_{year-1}.csv"
         
         # Initialize an empty DataFrame for the current season
         season_df = pd.DataFrame()
@@ -159,7 +167,7 @@ precisions = []
 recalls = []
 
 # Save to CSV
-file_path = 'NormalData/ResultsWeightedSum/output_file.csv'
+file_path = 'WithAgriculturalMask/ResultsWeightedSum/output_file.csv'
 data.to_csv(file_path, index=False)
 
 # Shuffle data
@@ -250,7 +258,7 @@ results_df["Predicted_Label"] = y_pred_xgb
 grouped_results = results_df.groupby(["District", "SeasonYear"])
 
 # Prepare the output file
-output_file = "NormalData/ResultsWeightedSum/xgboost_test_results.txt"
+output_file = "WithAgriculturalMask/ResultsWeightedSum/xgboost_test_results.txt"
 correct_groups = 0
 total_groups = len(grouped_results)
 
@@ -324,12 +332,12 @@ shap_values = explainer.shap_values(X_test)
 
 # Save SHAP summary plot as an image file
 shap.summary_plot(shap_values, X_test, plot_type="bar", feature_names=X_test.columns)
-plt.savefig("NormalData/ResultsWeightedSum/shap_summary_bar_plot_xgb.png")  # Save plot to file
+plt.savefig("WithAgriculturalMask/ResultsWeightedSum/shap_summary_bar_plot_xgb.png")  # Save plot to file
 plt.clf()  # Clear the current plot
 
 # Save the SHAP summary plot as an image
 shap.summary_plot(shap_values, X_test, feature_names=X_test.columns)
-plt.savefig("NormalData/ResultsWeightedSum/shap_summary_plot_xgb.png")  # Save plot to file
+plt.savefig("WithAgriculturalMask/ResultsWeightedSum/shap_summary_plot_xgb.png")  # Save plot to file
 plt.clf()  # Clear the current plot
 
 ## *****************************************************************************************************************##
@@ -362,7 +370,7 @@ with open(performance_output_file, "a") as f:
 
 # Prepare the output file
 results_df["Predicted_Label"] = y_pred_rf
-output_file = "NormalData/ResultsWeightedSum/rf_test_results.txt"
+output_file = "WithAgriculturalMask/ResultsWeightedSum/rf_test_results.txt"
 correct_groups = 0
 total_groups = len(grouped_results)
 
@@ -442,12 +450,12 @@ shap_values_rf_drought = shap_values_rf[:, :, 1]
 
 # Plot SHAP summary plot as a bar chart to show feature importance
 shap.summary_plot(shap_values_rf_drought, X_test, plot_type="bar", feature_names=X_test.columns)
-plt.savefig("NormalData/ResultsWeightedSum/shap_summary_bar_plot_rf.png")  # Save plot to file
+plt.savefig("WithAgriculturalMask/ResultsWeightedSum/shap_summary_bar_plot_rf.png")  # Save plot to file
 plt.clf()  # Clear the current plot
 
 # Plot the full SHAP summary plot to visualize feature impact on individual predictions
 shap.summary_plot(shap_values_rf_drought, X_test, feature_names=X_test.columns)
-plt.savefig("NormalData/ResultsWeightedSum/shap_summary_plot_rf.png")  # Save plot to file
+plt.savefig("WithAgriculturalMask/ResultsWeightedSum/shap_summary_plot_rf.png")  # Save plot to file
 plt.clf()  # Clear the current plot
 
 ## *****************************************************************************************************************##
@@ -482,7 +490,7 @@ print("Base estimator used in Bagging Classifier:", bagging.base_estimator_)
 
 # Prepare the output file
 results_df["Predicted_Label"] = y_pred_bagging
-output_file = "NormalData/ResultsWeightedSum/bagging_test_results.txt"
+output_file = "WithAgriculturalMask/ResultsWeightedSum/bagging_test_results.txt"
 correct_groups = 0
 total_groups = len(grouped_results)
 
@@ -556,12 +564,12 @@ shap_values_bagging = explainer_bagging.shap_values(X_test)
 
 # Plot SHAP summary plot as a bar chart for feature importance
 shap.summary_plot(shap_values_bagging, X_test, plot_type="bar", feature_names=X_test.columns)
-plt.savefig("NormalData/ResultsWeightedSum/shap_summary_bar_plot_bagging.png")  # Save bar plot to file
+plt.savefig("WithAgriculturalMask/ResultsWeightedSum/shap_summary_bar_plot_bagging.png")  # Save bar plot to file
 plt.clf()  # Clear the current plot
 
 # Plot the full SHAP summary plot to visualize feature impact on individual predictions
 shap.summary_plot(shap_values_bagging, X_test, feature_names=X_test.columns)
-plt.savefig("NormalData/ResultsWeightedSum/shap_summary_plot_bagging.png")  # Save beeswarm plot to file
+plt.savefig("WithAgriculturalMask/ResultsWeightedSum/shap_summary_plot_bagging.png")  # Save beeswarm plot to file
 plt.clf()  # Clear the current plot
 
 ## *****************************************************************************************************************##
@@ -593,7 +601,7 @@ with open(performance_output_file, "a") as f:
 
 # Prepare the output file
 results_df["Predicted_Label"] = y_pred_gb
-output_file = "NormalData/ResultsWeightedSum/gb_test_results.txt"
+output_file = "WithAgriculturalMask/ResultsWeightedSum/gb_test_results.txt"
 correct_groups = 0
 total_groups = len(grouped_results)
 
@@ -667,12 +675,12 @@ shap_values_gb = explainer_gb.shap_values(X_test)
 
 # Save SHAP summary plot as an image file for Gradient Boosting
 shap.summary_plot(shap_values_gb, X_test, plot_type="bar", feature_names=X_test.columns)
-plt.savefig("NormalData/ResultsWeightedSum/shap_summary_bar_plot_gb.png")  # Save plot to file
+plt.savefig("WithAgriculturalMask/ResultsWeightedSum/shap_summary_bar_plot_gb.png")  # Save plot to file
 plt.clf()  # Clear the current plot
 
 # Save the SHAP summary plot as an image for Gradient Boosting
 shap.summary_plot(shap_values_gb, X_test, feature_names=X_test.columns)
-plt.savefig("NormalData/ResultsWeightedSum/shap_summary_plot_gb.png")  # Save plot to file
+plt.savefig("WithAgriculturalMask/ResultsWeightedSum/shap_summary_plot_gb.png")  # Save plot to file
 plt.clf()  # Clear the current plot
 ## *****************************************************************************************************************##
 # Create a DataFrame with the metrics
@@ -690,7 +698,7 @@ ax.axis('off')
 table = ax.table(cellText=metrics_df1.values, colLabels=metrics_df1.columns, cellLoc='center', loc='center')
 
 # Save the table as a PNG image
-plt.savefig('NormalData/ResultsWeightedSum/model_performance_table.png')
+plt.savefig('WithAgriculturalMask/ResultsWeightedSum/model_performance_table.png')
 plt.clf()  # Clear the current plot
 ## *****************************************************************************************************************##
 
@@ -748,7 +756,7 @@ plt.gca().invert_yaxis()  # Invert the y-axis to display the top feature on top
 plt.tight_layout()
 
 # Save the plot
-plt.savefig("NormalData/ResultsWeightedSum/top_5_features_weighted_sum.png")
+plt.savefig("WithAgriculturalMask/ResultsWeightedSum/top_5_features_weighted_sum.png")
 plt.clf()  # Clear the plot
 
 ## *****************************************************************************************************************##
@@ -797,7 +805,7 @@ plt.figure(figsize=(12, 6))
 plt.axis('off')
 plt.table(cellText=metrics_df.values, colLabels=metrics_df.columns, rowLabels=metrics_df.index, loc='center', cellLoc='center', bbox=[0, 0, 1, 1])
 plt.tight_layout()
-plt.savefig("NormalData/ResultsWeightedSum/model_metrics_top_features_weighted_sum.png")
+plt.savefig("WithAgriculturalMask/ResultsWeightedSum/model_metrics_top_features_weighted_sum.png")
 plt.clf()
 
 # Print the metrics for verification
@@ -823,7 +831,7 @@ def plot_confusion_matrix(y_true, y_pred, model_name):
     plt.xlabel('Predicted')
     plt.ylabel('True')
     plt.tight_layout()
-    plt.savefig(f"NormalData/ResultsWeightedSum/confusion_matrix_{model_name.lower().replace(' ', '_')}.png")  # Save confusion matrix as an image
+    plt.savefig(f"WithAgriculturalMask/ResultsWeightedSum/confusion_matrix_{model_name.lower().replace(' ', '_')}.png")  # Save confusion matrix as an image
     plt.clf()  # Clear the current plot
 
 # Evaluate and perform error analysis for each model

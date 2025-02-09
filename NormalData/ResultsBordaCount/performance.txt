@@ -1,22 +1,22 @@
 XGBoost Results
 ===============================
-XGBoost Accuracy (Rabi Crop): 88.38% 
-XGBoost Precision: 89.06% 
-XGBoost Recall: 94.36% 
+XGBoost Accuracy (Rabi Crop): 82.74% 
+XGBoost Precision: 80.60% 
+XGBoost Recall: 74.18% 
 
 Overall Group Detection Results
 ===============================
 Total Groups: 18
-Correctly Detected Groups: 17
-Accuracy: 0.9444
-Precision: 0.9444
-Recall: 0.9444
+Correctly Detected Groups: 18
+Accuracy: 1.0000
+Precision: 1.0000
+Recall: 1.0000
 
 Random Forest Results
 ===============================
-Random Forest Accuracy (Rabi Crop): 88.06% 
-Random Forest Precision: 87.74% 
-Random Forest Recall: 95.65% 
+Random Forest Accuracy (Rabi Crop): 81.00% 
+Random Forest Precision: 78.55% 
+Random Forest Recall: 71.43% 
 
 Overall Group Detection Results
 ===============================
@@ -28,9 +28,9 @@ Recall: 0.9444
 
 Results
 ===============================
-Bagging Classifier Accuracy (Rabi Crop): 88.71% 
-Bagging Classifier Precision: 88.99% 
-Bagging Classifier Recall: 95.01% 
+Bagging Classifier Accuracy (Rabi Crop): 82.63% 
+Bagging Classifier Precision: 81.48% 
+Bagging Classifier Recall: 72.53% 
 
 Overall Group Detection Results
 ===============================
@@ -42,27 +42,27 @@ Recall: 0.9444
 
 Gradient Boosting Results
 ===============================
-Gradient Boosting Accuracy (Rabi Crop): 80.02% 
-Gradient Boosting Precision: 80.73% 
-Gradient Boosting Recall: 92.43% 
+Gradient Boosting Accuracy (Rabi Crop): 75.57% 
+Gradient Boosting Precision: 75.27% 
+Gradient Boosting Recall: 56.87% 
 
 Overall Group Detection Results
 ===============================
 Total Groups: 18
-Correctly Detected Groups: 14
-Accuracy: 0.7778
-Precision: 0.7778
-Recall: 0.7778
+Correctly Detected Groups: 15
+Accuracy: 0.8333
+Precision: 0.8333
+Recall: 0.8333
 
 Confusion Matrix for XGBoost:
-[[228  72]
- [ 35 586]]
+[[492  65]
+ [ 94 270]]
 Confusion Matrix for Random Forest:
-[[217  83]
- [ 27 594]]
+[[486  71]
+ [104 260]]
 Confusion Matrix for Bagging:
-[[227  73]
- [ 31 590]]
+[[497  60]
+ [100 264]]
 Confusion Matrix for Gradient Boosting:
-[[163 137]
- [ 47 574]]
+[[489  68]
+ [157 207]]
