@@ -1,0 +1,25 @@
+Model,Method 2,Method 1
+XGBoost,No_Sampling,SMOTE
+XGBoost,BorderlineSMOTE,No_Sampling
+XGBoost,BorderlineSMOTE,SMOTE
+XGBoost,ADASYN,No_Sampling
+XGBoost,ADASYN,SMOTE
+XGBoost,ADASYN,BorderlineSMOTE
+RandomForest,No_Sampling,SMOTE
+RandomForest,BorderlineSMOTE,No_Sampling
+RandomForest,BorderlineSMOTE,SMOTE
+RandomForest,ADASYN,No_Sampling
+RandomForest,ADASYN,SMOTE
+RandomForest,ADASYN,BorderlineSMOTE
+Bagging,No_Sampling,SMOTE
+Bagging,BorderlineSMOTE,No_Sampling
+Bagging,BorderlineSMOTE,SMOTE
+Bagging,ADASYN,No_Sampling
+Bagging,ADASYN,SMOTE
+Bagging,ADASYN,BorderlineSMOTE
+GradientBoosting,No_Sampling,SMOTE
+GradientBoosting,BorderlineSMOTE,No_Sampling
+GradientBoosting,BorderlineSMOTE,SMOTE
+GradientBoosting,ADASYN,No_Sampling
+GradientBoosting,ADASYN,SMOTE
+GradientBoosting,ADASYN,BorderlineSMOTE

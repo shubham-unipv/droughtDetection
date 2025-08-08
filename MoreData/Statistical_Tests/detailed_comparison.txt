@@ -1,0 +1,375 @@
+Comprehensive Statistical Comparison of Oversampling Methods
+====================================================
+
+
+Results for XGBoost
+==================================================
+
+No_Sampling vs SMOTE
+----------------------------------------
+McNemar's Test Statistic: 0.0000
+P-value: 0.0000
+Significant difference (alpha=0.05): True
+Effect Size: 0.0340
+
+Performance Metrics Comparison:
+Accuracy     - No_Sampling: 0.8480, SMOTE: 0.8140
+Precision    - No_Sampling: 0.8129, SMOTE: 0.7582
+Recall       - No_Sampling: 0.8164, SMOTE: 0.8006
+F1-Score     - No_Sampling: 0.8146, SMOTE: 0.7788
+Error Rate   - No_Sampling: 0.1520, SMOTE: 0.1860
+----------------------------------------
+
+BorderlineSMOTE vs No_Sampling
+----------------------------------------
+McNemar's Test Statistic: 30.0000
+P-value: 0.3961
+Significant difference (alpha=0.05): False
+Effect Size: 0.0047
+
+Performance Metrics Comparison:
+Accuracy     - BorderlineSMOTE: 0.8527, No_Sampling: 0.8480
+Precision    - BorderlineSMOTE: 0.8528, No_Sampling: 0.8129
+Recall       - BorderlineSMOTE: 0.7733, No_Sampling: 0.8164
+F1-Score     - BorderlineSMOTE: 0.8111, No_Sampling: 0.8146
+Error Rate   - BorderlineSMOTE: 0.1473, No_Sampling: 0.1520
+----------------------------------------
+
+BorderlineSMOTE vs SMOTE
+----------------------------------------
+McNemar's Test Statistic: 19.0000
+P-value: 0.0000
+Significant difference (alpha=0.05): True
+Effect Size: 0.0387
+
+Performance Metrics Comparison:
+Accuracy     - BorderlineSMOTE: 0.8527, SMOTE: 0.8140
+Precision    - BorderlineSMOTE: 0.8528, SMOTE: 0.7582
+Recall       - BorderlineSMOTE: 0.7733, SMOTE: 0.8006
+F1-Score     - BorderlineSMOTE: 0.8111, SMOTE: 0.7788
+Error Rate   - BorderlineSMOTE: 0.1473, SMOTE: 0.1860
+----------------------------------------
+
+ADASYN vs No_Sampling
+----------------------------------------
+McNemar's Test Statistic: 24.0000
+P-value: 0.4188
+Significant difference (alpha=0.05): False
+Effect Size: 0.0041
+
+Performance Metrics Comparison:
+Accuracy     - ADASYN: 0.8521, No_Sampling: 0.8480
+Precision    - ADASYN: 0.7947, No_Sampling: 0.8129
+Recall       - ADASYN: 0.8608, No_Sampling: 0.8164
+F1-Score     - ADASYN: 0.8264, No_Sampling: 0.8146
+Error Rate   - ADASYN: 0.1479, No_Sampling: 0.1520
+----------------------------------------
+
+ADASYN vs SMOTE
+----------------------------------------
+McNemar's Test Statistic: 0.0000
+P-value: 0.0000
+Significant difference (alpha=0.05): True
+Effect Size: 0.0381
+
+Performance Metrics Comparison:
+Accuracy     - ADASYN: 0.8521, SMOTE: 0.8140
+Precision    - ADASYN: 0.7947, SMOTE: 0.7582
+Recall       - ADASYN: 0.8608, SMOTE: 0.8006
+F1-Score     - ADASYN: 0.8264, SMOTE: 0.7788
+Error Rate   - ADASYN: 0.1479, SMOTE: 0.1860
+----------------------------------------
+
+ADASYN vs BorderlineSMOTE
+----------------------------------------
+McNemar's Test Statistic: 61.0000
+P-value: 1.0000
+Significant difference (alpha=0.05): False
+Effect Size: 0.0006
+
+Performance Metrics Comparison:
+Accuracy     - ADASYN: 0.8521, BorderlineSMOTE: 0.8527
+Precision    - ADASYN: 0.7947, BorderlineSMOTE: 0.8528
+Recall       - ADASYN: 0.8608, BorderlineSMOTE: 0.7733
+F1-Score     - ADASYN: 0.8264, BorderlineSMOTE: 0.8111
+Error Rate   - ADASYN: 0.1479, BorderlineSMOTE: 0.1473
+----------------------------------------
+
+Results for RandomForest
+==================================================
+
+No_Sampling vs SMOTE
+----------------------------------------
+McNemar's Test Statistic: 26.0000
+P-value: 0.0001
+Significant difference (alpha=0.05): True
+Effect Size: 0.0223
+
+Performance Metrics Comparison:
+Accuracy     - No_Sampling: 0.8298, SMOTE: 0.8075
+Precision    - No_Sampling: 0.8145, SMOTE: 0.7503
+Recall       - No_Sampling: 0.7561, SMOTE: 0.7934
+F1-Score     - No_Sampling: 0.7842, SMOTE: 0.7713
+Error Rate   - No_Sampling: 0.1702, SMOTE: 0.1925
+----------------------------------------
+
+BorderlineSMOTE vs No_Sampling
+----------------------------------------
+McNemar's Test Statistic: 26.0000
+P-value: 0.6889
+Significant difference (alpha=0.05): False
+Effect Size: 0.0023
+
+Performance Metrics Comparison:
+Accuracy     - BorderlineSMOTE: 0.8275, No_Sampling: 0.8298
+Precision    - BorderlineSMOTE: 0.8409, No_Sampling: 0.8145
+Recall       - BorderlineSMOTE: 0.7131, No_Sampling: 0.7561
+F1-Score     - BorderlineSMOTE: 0.7717, No_Sampling: 0.7842
+Error Rate   - BorderlineSMOTE: 0.1725, No_Sampling: 0.1702
+----------------------------------------
+
+BorderlineSMOTE vs SMOTE
+----------------------------------------
+McNemar's Test Statistic: 56.0000
+P-value: 0.0061
+Significant difference (alpha=0.05): True
+Effect Size: 0.0200
+
+Performance Metrics Comparison:
+Accuracy     - BorderlineSMOTE: 0.8275, SMOTE: 0.8075
+Precision    - BorderlineSMOTE: 0.8409, SMOTE: 0.7503
+Recall       - BorderlineSMOTE: 0.7131, SMOTE: 0.7934
+F1-Score     - BorderlineSMOTE: 0.7717, SMOTE: 0.7713
+Error Rate   - BorderlineSMOTE: 0.1725, SMOTE: 0.1925
+----------------------------------------
+
+ADASYN vs No_Sampling
+----------------------------------------
+McNemar's Test Statistic: 45.0000
+P-value: 0.6101
+Significant difference (alpha=0.05): False
+Effect Size: 0.0035
+
+Performance Metrics Comparison:
+Accuracy     - ADASYN: 0.8333, No_Sampling: 0.8298
+Precision    - ADASYN: 0.7779, No_Sampling: 0.8145
+Recall       - ADASYN: 0.8293, No_Sampling: 0.7561
+F1-Score     - ADASYN: 0.8028, No_Sampling: 0.7842
+Error Rate   - ADASYN: 0.1667, No_Sampling: 0.1702
+----------------------------------------
+
+ADASYN vs SMOTE
+----------------------------------------
+McNemar's Test Statistic: 0.0000
+P-value: 0.0000
+Significant difference (alpha=0.05): True
+Effect Size: 0.0258
+
+Performance Metrics Comparison:
+Accuracy     - ADASYN: 0.8333, SMOTE: 0.8075
+Precision    - ADASYN: 0.7779, SMOTE: 0.7503
+Recall       - ADASYN: 0.8293, SMOTE: 0.7934
+F1-Score     - ADASYN: 0.8028, SMOTE: 0.7713
+Error Rate   - ADASYN: 0.1667, SMOTE: 0.1925
+----------------------------------------
+
+ADASYN vs BorderlineSMOTE
+----------------------------------------
+McNemar's Test Statistic: 71.0000
+P-value: 0.4655
+Significant difference (alpha=0.05): False
+Effect Size: 0.0059
+
+Performance Metrics Comparison:
+Accuracy     - ADASYN: 0.8333, BorderlineSMOTE: 0.8275
+Precision    - ADASYN: 0.7779, BorderlineSMOTE: 0.8409
+Recall       - ADASYN: 0.8293, BorderlineSMOTE: 0.7131
+F1-Score     - ADASYN: 0.8028, BorderlineSMOTE: 0.7717
+Error Rate   - ADASYN: 0.1667, BorderlineSMOTE: 0.1725
+----------------------------------------
+
+Results for Bagging
+==================================================
+
+No_Sampling vs SMOTE
+----------------------------------------
+McNemar's Test Statistic: 19.0000
+P-value: 0.0000
+Significant difference (alpha=0.05): True
+Effect Size: 0.0258
+
+Performance Metrics Comparison:
+Accuracy     - No_Sampling: 0.8398, SMOTE: 0.8140
+Precision    - No_Sampling: 0.8232, SMOTE: 0.7575
+Recall       - No_Sampling: 0.7747, SMOTE: 0.8020
+F1-Score     - No_Sampling: 0.7982, SMOTE: 0.7791
+Error Rate   - No_Sampling: 0.1602, SMOTE: 0.1860
+----------------------------------------
+
+BorderlineSMOTE vs No_Sampling
+----------------------------------------
+McNemar's Test Statistic: 21.0000
+P-value: 0.1337
+Significant difference (alpha=0.05): False
+Effect Size: 0.0070
+
+Performance Metrics Comparison:
+Accuracy     - BorderlineSMOTE: 0.8468, No_Sampling: 0.8398
+Precision    - BorderlineSMOTE: 0.8621, No_Sampling: 0.8232
+Recall       - BorderlineSMOTE: 0.7446, No_Sampling: 0.7747
+F1-Score     - BorderlineSMOTE: 0.7991, No_Sampling: 0.7982
+Error Rate   - BorderlineSMOTE: 0.1532, No_Sampling: 0.1602
+----------------------------------------
+
+BorderlineSMOTE vs SMOTE
+----------------------------------------
+McNemar's Test Statistic: 40.0000
+P-value: 0.0000
+Significant difference (alpha=0.05): True
+Effect Size: 0.0329
+
+Performance Metrics Comparison:
+Accuracy     - BorderlineSMOTE: 0.8468, SMOTE: 0.8140
+Precision    - BorderlineSMOTE: 0.8621, SMOTE: 0.7575
+Recall       - BorderlineSMOTE: 0.7446, SMOTE: 0.8020
+F1-Score     - BorderlineSMOTE: 0.7991, SMOTE: 0.7791
+Error Rate   - BorderlineSMOTE: 0.1532, SMOTE: 0.1860
+----------------------------------------
+
+ADASYN vs No_Sampling
+----------------------------------------
+McNemar's Test Statistic: 40.0000
+P-value: 0.1253
+Significant difference (alpha=0.05): False
+Effect Size: 0.0094
+
+Performance Metrics Comparison:
+Accuracy     - ADASYN: 0.8492, No_Sampling: 0.8398
+Precision    - ADASYN: 0.7926, No_Sampling: 0.8232
+Recall       - ADASYN: 0.8551, No_Sampling: 0.7747
+F1-Score     - ADASYN: 0.8226, No_Sampling: 0.7982
+Error Rate   - ADASYN: 0.1508, No_Sampling: 0.1602
+----------------------------------------
+
+ADASYN vs SMOTE
+----------------------------------------
+McNemar's Test Statistic: 0.0000
+P-value: 0.0000
+Significant difference (alpha=0.05): True
+Effect Size: 0.0352
+
+Performance Metrics Comparison:
+Accuracy     - ADASYN: 0.8492, SMOTE: 0.8140
+Precision    - ADASYN: 0.7926, SMOTE: 0.7575
+Recall       - ADASYN: 0.8551, SMOTE: 0.8020
+F1-Score     - ADASYN: 0.8226, SMOTE: 0.7791
+Error Rate   - ADASYN: 0.1508, SMOTE: 0.1860
+----------------------------------------
+
+ADASYN vs BorderlineSMOTE
+----------------------------------------
+McNemar's Test Statistic: 73.0000
+P-value: 0.8066
+Significant difference (alpha=0.05): False
+Effect Size: 0.0023
+
+Performance Metrics Comparison:
+Accuracy     - ADASYN: 0.8492, BorderlineSMOTE: 0.8468
+Precision    - ADASYN: 0.7926, BorderlineSMOTE: 0.8621
+Recall       - ADASYN: 0.8551, BorderlineSMOTE: 0.7446
+F1-Score     - ADASYN: 0.8226, BorderlineSMOTE: 0.7991
+Error Rate   - ADASYN: 0.1508, BorderlineSMOTE: 0.1532
+----------------------------------------
+
+Results for GradientBoosting
+==================================================
+
+No_Sampling vs SMOTE
+----------------------------------------
+McNemar's Test Statistic: 103.0000
+P-value: 0.4973
+Significant difference (alpha=0.05): False
+Effect Size: 0.0065
+
+Performance Metrics Comparison:
+Accuracy     - No_Sampling: 0.7424, SMOTE: 0.7359
+Precision    - No_Sampling: 0.7209, SMOTE: 0.6542
+Recall       - No_Sampling: 0.6040, SMOTE: 0.7518
+F1-Score     - No_Sampling: 0.6573, SMOTE: 0.6996
+Error Rate   - No_Sampling: 0.2576, SMOTE: 0.2641
+----------------------------------------
+
+BorderlineSMOTE vs No_Sampling
+----------------------------------------
+McNemar's Test Statistic: 10.0000
+P-value: 0.0501
+Significant difference (alpha=0.05): False
+Effect Size: 0.0070
+
+Performance Metrics Comparison:
+Accuracy     - BorderlineSMOTE: 0.7494, No_Sampling: 0.7424
+Precision    - BorderlineSMOTE: 0.7192, No_Sampling: 0.7209
+Recall       - BorderlineSMOTE: 0.6356, No_Sampling: 0.6040
+F1-Score     - BorderlineSMOTE: 0.6748, No_Sampling: 0.6573
+Error Rate   - BorderlineSMOTE: 0.2506, No_Sampling: 0.2576
+----------------------------------------
+
+BorderlineSMOTE vs SMOTE
+----------------------------------------
+McNemar's Test Statistic: 81.0000
+P-value: 0.1055
+Significant difference (alpha=0.05): False
+Effect Size: 0.0135
+
+Performance Metrics Comparison:
+Accuracy     - BorderlineSMOTE: 0.7494, SMOTE: 0.7359
+Precision    - BorderlineSMOTE: 0.7192, SMOTE: 0.6542
+Recall       - BorderlineSMOTE: 0.6356, SMOTE: 0.7518
+F1-Score     - BorderlineSMOTE: 0.6748, SMOTE: 0.6996
+Error Rate   - BorderlineSMOTE: 0.2506, SMOTE: 0.2641
+----------------------------------------
+
+ADASYN vs No_Sampling
+----------------------------------------
+McNemar's Test Statistic: 107.0000
+P-value: 0.2141
+Significant difference (alpha=0.05): False
+Effect Size: 0.0117
+
+Performance Metrics Comparison:
+Accuracy     - ADASYN: 0.7306, No_Sampling: 0.7424
+Precision    - ADASYN: 0.6455, No_Sampling: 0.7209
+Recall       - ADASYN: 0.7575, No_Sampling: 0.6040
+F1-Score     - ADASYN: 0.6970, No_Sampling: 0.6573
+Error Rate   - ADASYN: 0.2694, No_Sampling: 0.2576
+----------------------------------------
+
+ADASYN vs SMOTE
+----------------------------------------
+McNemar's Test Statistic: 4.0000
+P-value: 0.0490
+Significant difference (alpha=0.05): True
+Effect Size: 0.0053
+
+Performance Metrics Comparison:
+Accuracy     - ADASYN: 0.7306, SMOTE: 0.7359
+Precision    - ADASYN: 0.6455, SMOTE: 0.6542
+Recall       - ADASYN: 0.7575, SMOTE: 0.7518
+F1-Score     - ADASYN: 0.6970, SMOTE: 0.6996
+Error Rate   - ADASYN: 0.2694, SMOTE: 0.2641
+----------------------------------------
+
+ADASYN vs BorderlineSMOTE
+----------------------------------------
+McNemar's Test Statistic: 85.0000
+P-value: 0.0289
+Significant difference (alpha=0.05): True
+Effect Size: 0.0188
+
+Performance Metrics Comparison:
+Accuracy     - ADASYN: 0.7306, BorderlineSMOTE: 0.7494
+Precision    - ADASYN: 0.6455, BorderlineSMOTE: 0.7192
+Recall       - ADASYN: 0.7575, BorderlineSMOTE: 0.6356
+F1-Score     - ADASYN: 0.6970, BorderlineSMOTE: 0.6748
+Error Rate   - ADASYN: 0.2694, BorderlineSMOTE: 0.2506
+----------------------------------------

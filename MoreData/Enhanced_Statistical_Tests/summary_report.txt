@@ -1,0 +1,6 @@
+Key Findings:
+1. ADASYN showed consistent F1-score improvements:
+
+2. BorderlineSMOTE showed specific advantages:
+
+3. SMOTE generally underperformed:
