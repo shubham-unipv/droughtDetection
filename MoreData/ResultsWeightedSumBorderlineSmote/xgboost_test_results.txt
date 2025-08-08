@@ -1,0 +1,7 @@
+Overall Group Detection Results
+===============================
+Total Groups: 30
+Correctly Detected Groups: 28
+Accuracy: 0.9333
+Precision: 0.9333
+Recall: 0.9333
