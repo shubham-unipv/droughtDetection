@@ -11,6 +11,8 @@
 ## New:: Instead of using Dayoftheyear, I am using day of the season instead.
 ## New:: Dropping Month also from the dataset to not cause any confusion.
 
+from sklearn.model_selection import cross_val_score, StratifiedKFold
+from scipy import stats
 import numpy as np
 import pandas as pd
 import os
@@ -39,6 +41,9 @@ from imblearn.over_sampling import BorderlineSMOTE
 from imblearn.under_sampling import EditedNearestNeighbours
 from imblearn.pipeline import Pipeline
 from imblearn.over_sampling import ADASYN
+
+from sklearn.metrics import roc_curve, auc, RocCurveDisplay
+import seaborn as sns
 
 """
 # Dictionary for drought-affected years (1 for drought, 0 for no drought).
@@ -87,22 +92,22 @@ drought_labels = {
 }
 
 """
-performance_output_file = "WithAgriculturalMask/ResultsBordaCount/performance.txt"
+performance_output_file = "MoreData/ResultsBordaCount/performance.txt"
 
 # Dictionary for drought-affected years (1 for drought, 0 for no drought).
 # Using newspaper and other government reports with Jit.
 drought_labels = {
-    'Jodhpur': {2016: 1, 2017: 0, 2018: 0, 2019: 1, 2020: 1, 2021:0 },
-    'Amravati': {2016: 1, 2017: 0, 2018: 0, 2019: 1, 2020: 0, 2021:0 },
-    'Thanjavur': {2016: 0, 2017: 1, 2018: 0, 2019: 1, 2020: 0, 2021:0 }
+    'Jodhpur': {2016: 1, 2017: 0, 2018: 0, 2019: 1, 2020: 1, 2021:0, 2022:1, 2023:0, 2024:1, 2025:0 },
+    'Amravati': {2016: 1, 2017: 0, 2018: 0, 2019: 1, 2020: 0, 2021:0, 2022:0, 2023:1, 2024:1, 2025:0 },
+    'Thanjavur': {2016: 0, 2017: 1, 2018: 0, 2019: 1, 2020: 0, 2021:0, 2022:0, 2023:0, 2024:1, 2025:0 }
 }
 
 def load_data(district):
     dfs = []
-    for year in range(2016, 2022):  # Loop through the relevant years
+    for year in range(2016, 2026):  # Loop through the relevant years
         # Define filenames for both current and previous year's data
-        current_file = f"WithAgriculturalMask/timeSeriesData/TimeSeries_{district}_{year}.csv"
-        previous_file = f"WithAgriculturalMask/timeSeriesData/TimeSeries_{district}_{year-1}.csv"
+        current_file = f"MoreData/timeSeriesData/TimeSeries_{district}_{year}.csv"
+        previous_file = f"MoreData/timeSeriesData/TimeSeries_{district}_{year-1}.csv"
         
         # Initialize an empty DataFrame for the current season
         season_df = pd.DataFrame()
@@ -167,7 +172,7 @@ precisions = []
 recalls = []
 
 # Save to CSV
-file_path = 'WithAgriculturalMask/ResultsBordaCount/output_file.csv'
+file_path = 'MoreData/ResultsBordaCount/output_file.csv'
 data.to_csv(file_path, index=False)
 
 # Shuffle data
@@ -217,37 +222,99 @@ X_test = X_test.drop(columns=['SeasonYear','Drought', 'Year', 'Month', 'District
 # Handle class imbalance with Borderline-SMOTE and ENN
 #X_train, y_train = pipeline.fit_resample(X_train, y_train)
 
-# Handle class imbalance with ADASYN
+# Check class distribution before ADASYN
+#print("\nOriginal class distribution:")
+#print(y_train.value_counts())
+
 #adasyn = ADASYN(random_state=42)
 #X_train, y_train = adasyn.fit_resample(X_train, y_train)
 
 ## *****************************************************************************************************************##
 
 ### XGBoost Classifier ###
-
 model_names.append('XGBoost')
-xgb_model = XGBClassifier(random_state=42)
+xgb_model = XGBClassifier(n_estimators=200,random_state=42)
+
+# Train-Test Split Results
 xgb_model.fit(X_train, y_train)
 y_pred_xgb = xgb_model.predict(X_test)
-accuracy_xgb = accuracy_score(y_test, y_pred_xgb)
-accuracies.append(accuracy_xgb)
-print(f"XGBoost Accuracy (Rabi Crop): {accuracy_xgb * 100:.2f}%")
+test_accuracy = accuracy_score(y_test, y_pred_xgb)
+test_precision = precision_score(y_test, y_pred_xgb)
+test_recall = recall_score(y_test, y_pred_xgb)
 
-# Calculate Precision and Recall for XGBoost
-precision_xgb = precision_score(y_test, y_pred_xgb, pos_label=1)  # Use 1 for drought
-recall_xgb = recall_score(y_test, y_pred_xgb, pos_label=1)
-precisions.append(precision_xgb)
-recalls.append(recall_xgb)
+# Cross-validation Results
+cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+cv_accuracies = cross_val_score(XGBClassifier(n_estimators=200,random_state=42), X_train, y_train, cv=cv, scoring='accuracy')
+cv_precisions = cross_val_score(XGBClassifier(n_estimators=200,random_state=42), X_train, y_train, cv=cv, scoring='precision')
+cv_recalls = cross_val_score(XGBClassifier(n_estimators=200,random_state=42), X_train, y_train, cv=cv, scoring='recall')
 
-print(f"XGBoost Precision: {precision_xgb * 100:.2f}%")
-print(f"XGBoost Recall: {recall_xgb * 100:.2f}%")
+# Calculate means for storing
+accuracy_xgb = cv_accuracies.mean()
+precision_xgb = cv_precisions.mean()
+recall_xgb = cv_recalls.mean()
 
+accuracies.append(test_accuracy)
+precisions.append(test_precision)
+recalls.append(test_recall)
+
+# Print and save results
+print("\nXGBoost Results")
+print("================")
+print("Cross-validation Results:")
+print(f"CV Accuracy: {accuracy_xgb:.4f} ± {cv_accuracies.std():.4f}")
+print(f"CV Precision: {precision_xgb:.4f} ± {cv_precisions.std():.4f}")
+print(f"CV Recall: {recall_xgb:.4f} ± {cv_recalls.std():.4f}")
+print("\nTrain-Test Split Results:")
+print(f"Test Accuracy: {test_accuracy:.4f}")
+print(f"Test Precision: {test_precision:.4f}")
+print(f"Test Recall: {test_recall:.4f}")
+
+# Save results to file
 with open(performance_output_file, "w") as f:
     f.write("XGBoost Results\n")
-    f.write("===============================\n")
-    f.write(f"XGBoost Accuracy (Rabi Crop): {accuracy_xgb * 100:.2f}% \n")
-    f.write(f"XGBoost Precision: {precision_xgb * 100:.2f}% \n")
-    f.write(f"XGBoost Recall: {recall_xgb * 100:.2f}% \n\n")
+    f.write("================\n\n")
+    f.write("Cross-validation Results:\n")
+    f.write(f"CV Accuracy: {accuracy_xgb:.4f} ± {cv_accuracies.std():.4f}\n")
+    f.write(f"CV Precision: {precision_xgb:.4f} ± {cv_precisions.std():.4f}\n")
+    f.write(f"CV Recall: {recall_xgb:.4f} ± {cv_recalls.std():.4f}\n\n")
+    f.write("Train-Test Split Results:\n")
+    f.write(f"Test Accuracy: {test_accuracy:.4f}\n")
+    f.write(f"Test Precision: {test_precision:.4f}\n")
+    f.write(f"Test Recall: {test_recall:.4f}\n\n")
+
+# Create and save a summary table
+metrics_df = pd.DataFrame({
+    'Metric': ['Accuracy', 'Precision', 'Recall'],
+    'Cross-validation': [
+        f"{accuracy_xgb:.4f} ± {cv_accuracies.std():.4f}",
+        f"{precision_xgb:.4f} ± {cv_precisions.std():.4f}",
+        f"{recall_xgb:.4f} ± {cv_recalls.std():.4f}"
+    ],
+    'Train-Test Split': [
+        f"{test_accuracy:.4f}",
+        f"{test_precision:.4f}",
+        f"{test_recall:.4f}"
+    ]
+})
+
+# Save metrics table as image
+plt.figure(figsize=(10, 4))
+ax = plt.gca()
+ax.axis('tight')
+ax.axis('off')
+table = plt.table(cellText=metrics_df.values,
+                 colLabels=metrics_df.columns,
+                 rowLabels=None,
+                 cellLoc='center',
+                 loc='center',
+                 bbox=[0, 0, 1, 1])
+table.auto_set_font_size(False)
+table.set_fontsize(9)
+table.scale(1.2, 1.5)
+plt.title("XGBoost Performance Metrics Comparison")
+plt.savefig("MoreData/ResultsBordaCount/xgboost_metrics_comparison.png", 
+            bbox_inches='tight', dpi=300)
+plt.close()
 
 # Convert predictions to a DataFrame
 results_df = X_test_copy
@@ -258,7 +325,7 @@ results_df["Predicted_Label"] = y_pred_xgb
 grouped_results = results_df.groupby(["District", "SeasonYear"])
 
 # Prepare the output file
-output_file = "WithAgriculturalMask/ResultsBordaCount/xgboost_test_results.txt"
+output_file = "MoreData/ResultsBordaCount/xgboost_test_results.txt"
 correct_groups = 0
 total_groups = len(grouped_results)
 
@@ -326,51 +393,174 @@ print(f"Recall: {recall:.4f}")
 
 print(f"Results saved to {output_file}")
 
+# --- Heatmap of group detection by district and year for XGBoost ---
+heatmap_data = []
+for (district, seasonYear), group in grouped_results:
+    predicted_counts = group['Predicted_Label'].value_counts()
+    count_0 = predicted_counts.get(0, 0)
+    count_1 = predicted_counts.get(1, 0)
+    majority_prediction = 1 if count_1 >= count_0 else 0
+    actual_label = group['Actual_Label'].mode()[0]
+    correct = int(majority_prediction == actual_label)
+    heatmap_data.append({'District': district, 'Year': seasonYear, 'Correct': correct})
+
+heatmap_df = pd.DataFrame(heatmap_data)
+heatmap_matrix = heatmap_df.pivot(index='District', columns='Year', values='Correct')
+
+plt.figure(figsize=(10, 4))
+sns.heatmap(heatmap_matrix, annot=True, cmap='YlGnBu', cbar_kws={'label': 'Correct Group Detection (1=Correct, 0=Wrong)'})
+plt.title('XGBoost Group Detection Accuracy by District and Year')
+plt.xlabel('Year')
+plt.ylabel('District')
+plt.tight_layout()
+plt.savefig("MoreData/ResultsBordaCount/group_detection_heatmap_xgb.png")
+plt.clf()
+
 # SHAP Analysis for XGBoost
 explainer = shap.TreeExplainer(xgb_model)
 shap_values = explainer.shap_values(X_test)
 
 # Save SHAP summary plot as an image file
 shap.summary_plot(shap_values, X_test, plot_type="bar", feature_names=X_test.columns)
-plt.savefig("WithAgriculturalMask/ResultsBordaCount/shap_summary_bar_plot_xgb.png")  # Save plot to file
+plt.savefig("MoreData/ResultsBordaCount/shap_summary_bar_plot_xgb.png")  # Save plot to file
 plt.clf()  # Clear the current plot
 
 # Save the SHAP summary plot as an image
 shap.summary_plot(shap_values, X_test, feature_names=X_test.columns)
-plt.savefig("WithAgriculturalMask/ResultsBordaCount/shap_summary_plot_xgb.png")  # Save plot to file
+plt.savefig("MoreData/ResultsBordaCount/shap_summary_plot_xgb.png")  # Save plot to file
 plt.clf()  # Clear the current plot
+
+# ROC and AUC Curves for XGBoost
+y_scores_xgb = xgb_model.predict_proba(X_test)[:, 1]
+fpr_xgb, tpr_xgb, thresholds_xgb = roc_curve(y_test, y_scores_xgb)
+roc_auc_xgb = auc(fpr_xgb, tpr_xgb)
+
+# Create figure for ROC curve
+plt.figure(figsize=(10, 8))
+
+# Plot ROC curve
+plt.plot(fpr_xgb, tpr_xgb, color='darkorange', lw=2, 
+         label=f'ROC curve (AUC = {roc_auc_xgb:.2f})')
+
+# Plot diagonal line (random classifier)
+plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+
+# Customize plot
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('ROC and AUC Curves - XGBoost')
+plt.legend(loc="lower right")
+
+# Add AUC score text
+plt.text(0.6, 0.2, f'AUC Score: {roc_auc_xgb:.4f}', 
+         bbox=dict(facecolor='white', alpha=0.8))
+
+# Save plot
+plt.savefig("MoreData/ResultsBordaCount/roc_auc_curve_xgb.png", 
+            bbox_inches='tight', dpi=300)
+plt.clf()
+
+# Save AUC score to performance file
+with open(performance_output_file, "a") as f:
+    f.write("\nXGBoost ROC-AUC Results\n")
+    f.write("=====================\n")
+    f.write(f"AUC Score: {roc_auc_xgb:.4f}\n\n")
 
 ## *****************************************************************************************************************##
 
 ### Random Forest Classifier ###
 model_names.append('Random Forest')
 rf = RandomForestClassifier(n_estimators=200, random_state=42)
+
+# Train-Test Split Results
 rf.fit(X_train, y_train)
 y_pred_rf = rf.predict(X_test)
-accuracy_rf = accuracy_score(y_test, y_pred_rf)
-accuracies.append(accuracy_rf)
-print(f"Random Forest Accuracy (Rabi Crop): {accuracy_rf * 100:.2f}%")
+test_accuracy = accuracy_score(y_test, y_pred_rf)
+test_precision = precision_score(y_test, y_pred_rf)
+test_recall = recall_score(y_test, y_pred_rf)
 
-# Calculate Precision and Recall for Random Forest
-precision_rf = precision_score(y_test, y_pred_rf, pos_label=1)  # Use 1 for drought
-recall_rf = recall_score(y_test, y_pred_rf, pos_label=1)
+# Cross-validation Results
+cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+cv_accuracies = cross_val_score(RandomForestClassifier(n_estimators=200, random_state=42), 
+                               X_train, y_train, cv=cv, scoring='accuracy')
+cv_precisions = cross_val_score(RandomForestClassifier(n_estimators=200, random_state=42), 
+                               X_train, y_train, cv=cv, scoring='precision')
+cv_recalls = cross_val_score(RandomForestClassifier(n_estimators=200, random_state=42), 
+                            X_train, y_train, cv=cv, scoring='recall')
 
-precisions.append(precision_rf)
-recalls.append(recall_rf)
-print(f"Random Forest Precision: {precision_rf * 100:.2f}%")
-print(f"Random Forest Recall: {recall_rf * 100:.2f}%")
+# Calculate means for storing
+accuracy_rf = cv_accuracies.mean()
+precision_rf = cv_precisions.mean()
+recall_rf = cv_recalls.mean()
 
+accuracies.append(test_accuracy)
+precisions.append(test_precision)
+recalls.append(test_recall)
+
+# Print and save results
+print("\nRandom Forest Results")
+print("====================")
+print("Cross-validation Results:")
+print(f"CV Accuracy: {accuracy_rf:.4f} ± {cv_accuracies.std():.4f}")
+print(f"CV Precision: {precision_rf:.4f} ± {cv_precisions.std():.4f}")
+print(f"CV Recall: {recall_rf:.4f} ± {cv_recalls.std():.4f}")
+print("\nTrain-Test Split Results:")
+print(f"Test Accuracy: {test_accuracy:.4f}")
+print(f"Test Precision: {test_precision:.4f}")
+print(f"Test Recall: {test_recall:.4f}")
+
+# Save results to file
 with open(performance_output_file, "a") as f:
-    f.write("Random Forest Results\n")
-    f.write("===============================\n")
-    f.write(f"Random Forest Accuracy (Rabi Crop): {accuracy_rf * 100:.2f}% \n")
-    f.write(f"Random Forest Precision: {precision_rf * 100:.2f}% \n")
-    f.write(f"Random Forest Recall: {recall_rf * 100:.2f}% \n\n")
+    f.write("\nRandom Forest Results\n")
+    f.write("====================\n\n")
+    f.write("Cross-validation Results:\n")
+    f.write(f"CV Accuracy: {accuracy_rf:.4f} ± {cv_accuracies.std():.4f}\n")
+    f.write(f"CV Precision: {precision_rf:.4f} ± {cv_precisions.std():.4f}\n")
+    f.write(f"CV Recall: {recall_rf:.4f} ± {cv_recalls.std():.4f}\n\n")
+    f.write("Train-Test Split Results:\n")
+    f.write(f"Test Accuracy: {test_accuracy:.4f}\n")
+    f.write(f"Test Precision: {test_precision:.4f}\n")
+    f.write(f"Test Recall: {test_recall:.4f}\n\n")
 
+# Create and save a summary table
+metrics_df = pd.DataFrame({
+    'Metric': ['Accuracy', 'Precision', 'Recall'],
+    'Cross-validation': [
+        f"{accuracy_rf:.4f} ± {cv_accuracies.std():.4f}",
+        f"{precision_rf:.4f} ± {cv_precisions.std():.4f}",
+        f"{recall_rf:.4f} ± {cv_recalls.std():.4f}"
+    ],
+    'Train-Test Split': [
+        f"{test_accuracy:.4f}",
+        f"{test_precision:.4f}",
+        f"{test_recall:.4f}"
+    ]
+})
+
+# Save metrics table as image
+plt.figure(figsize=(10, 4))
+ax = plt.gca()
+ax.axis('tight')
+ax.axis('off')
+table = plt.table(cellText=metrics_df.values,
+                 colLabels=metrics_df.columns,
+                 rowLabels=None,
+                 cellLoc='center',
+                 loc='center',
+                 bbox=[0, 0, 1, 1])
+table.auto_set_font_size(False)
+table.set_fontsize(9)
+table.scale(1.2, 1.5)
+plt.title("Random Forest Performance Metrics Comparison")
+plt.savefig("MoreData/ResultsBordaCount/random_forest_metrics_comparison.png", 
+            bbox_inches='tight', dpi=300)
+plt.close()
 
 # Prepare the output file
 results_df["Predicted_Label"] = y_pred_rf
-output_file = "WithAgriculturalMask/ResultsBordaCount/rf_test_results.txt"
+output_file = "MoreData/ResultsBordaCount/rf_test_results.txt"
 correct_groups = 0
 total_groups = len(grouped_results)
 
@@ -437,6 +627,29 @@ print(f"Precision: {precision:.4f}")
 print(f"Recall: {recall:.4f}")
 
 print(f"Results saved to {output_file}")
+
+# --- Heatmap of group detection by district and year for Random Forest ---
+heatmap_data_rf = []
+for (district, seasonYear), group in grouped_results:
+    predicted_counts = group['Predicted_Label'].value_counts()
+    count_0 = predicted_counts.get(0, 0)
+    count_1 = predicted_counts.get(1, 0)
+    majority_prediction = 1 if count_1 >= count_0 else 0
+    actual_label = group['Actual_Label'].mode()[0]
+    correct = int(majority_prediction == actual_label)
+    heatmap_data_rf.append({'District': district, 'Year': seasonYear, 'Correct': correct})
+
+heatmap_df_rf = pd.DataFrame(heatmap_data_rf)
+heatmap_matrix_rf = heatmap_df_rf.pivot(index='District', columns='Year', values='Correct')
+
+plt.figure(figsize=(10, 4))
+sns.heatmap(heatmap_matrix_rf, annot=True, cmap='YlGnBu', cbar_kws={'label': 'Correct Group Detection (1=Correct, 0=Wrong)'})
+plt.title('Random Forest Group Detection Accuracy by District and Year')
+plt.xlabel('Year')
+plt.ylabel('District')
+plt.tight_layout()
+plt.savefig("MoreData/ResultsBordaCount/group_detection_heatmap_rf.png")
+plt.clf()
 
 # SHAP Analysis with TreeExplainer for Random Forest
 explainer_rf = shap.TreeExplainer(rf)  # 'rf' is your trained Random Forest model
@@ -450,47 +663,146 @@ shap_values_rf_drought = shap_values_rf[:, :, 1]
 
 # Plot SHAP summary plot as a bar chart to show feature importance
 shap.summary_plot(shap_values_rf_drought, X_test, plot_type="bar", feature_names=X_test.columns)
-plt.savefig("WithAgriculturalMask/ResultsBordaCount/shap_summary_bar_plot_rf.png")  # Save plot to file
+plt.savefig("MoreData/ResultsBordaCount/shap_summary_bar_plot_rf.png")  # Save plot to file
 plt.clf()  # Clear the current plot
 
 # Plot the full SHAP summary plot to visualize feature impact on individual predictions
 shap.summary_plot(shap_values_rf_drought, X_test, feature_names=X_test.columns)
-plt.savefig("WithAgriculturalMask/ResultsBordaCount/shap_summary_plot_rf.png")  # Save plot to file
+plt.savefig("MoreData/ResultsBordaCount/shap_summary_plot_rf.png")  # Save plot to file
 plt.clf()  # Clear the current plot
+
+# ROC Curve for Random Forest
+y_scores_rf = rf.predict_proba(X_test)[:, 1]
+fpr_rf, tpr_rf, _ = roc_curve(y_test, y_scores_rf)
+roc_auc_rf = auc(fpr_rf, tpr_rf)
+
+# Create figure for ROC curve
+plt.figure(figsize=(10, 8))
+
+# Plot ROC curve
+plt.plot(fpr_rf, tpr_rf, color='darkorange', lw=2, 
+         label=f'ROC curve (AUC = {roc_auc_rf:.2f})')
+
+# Plot diagonal line (random classifier)
+plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+
+# Customize plot
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('ROC and AUC Curves - Random Forest')
+plt.legend(loc="lower right")
+
+# Add AUC score text
+plt.text(0.6, 0.2, f'AUC Score: {roc_auc_rf:.4f}', 
+         bbox=dict(facecolor='white', alpha=0.8))
+
+# Save plot
+plt.savefig("MoreData/ResultsBordaCount/roc_auc_curve_rf.png", 
+            bbox_inches='tight', dpi=300)
+plt.clf()
+
+# Save AUC score to performance file
+with open(performance_output_file, "a") as f:
+    f.write("\nRandom Forest ROC-AUC Results\n")
+    f.write("===========================\n")
+    f.write(f"AUC Score: {roc_auc_rf:.4f}\n\n")
 
 ## *****************************************************************************************************************##
 
 # Bagging Classifier
+### Bagging Classifier ###
 model_names.append('Bagging')
-bagging = BaggingClassifier(n_estimators=100, random_state=42)
+bagging = BaggingClassifier(n_estimators=200, random_state=42)
+
+# Train-Test Split Results
 bagging.fit(X_train, y_train)
 y_pred_bagging = bagging.predict(X_test)
-accuracy_bagging = accuracy_score(y_test, y_pred_bagging)
-accuracies.append(accuracy_bagging)
-print(f"Bagging Classifier Accuracy (Rabi Crop): {accuracy_bagging * 100:.2f}%")
+test_accuracy = accuracy_score(y_test, y_pred_bagging)
+test_precision = precision_score(y_test, y_pred_bagging)
+test_recall = recall_score(y_test, y_pred_bagging)
 
-# Calculate Precision and Recall for Bagging Classifier
-precision_bagging = precision_score(y_test, y_pred_bagging, pos_label=1)  # Use 1 for drought
-recall_bagging = recall_score(y_test, y_pred_bagging, pos_label=1)
+# Cross-validation Results
+cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+cv_accuracies = cross_val_score(BaggingClassifier(n_estimators=200, random_state=42), 
+                               X_train, y_train, cv=cv, scoring='accuracy')
+cv_precisions = cross_val_score(BaggingClassifier(n_estimators=200, random_state=42), 
+                               X_train, y_train, cv=cv, scoring='precision')
+cv_recalls = cross_val_score(BaggingClassifier(n_estimators=200, random_state=42), 
+                            X_train, y_train, cv=cv, scoring='recall')
 
-precisions.append(precision_bagging)
-recalls.append(recall_bagging)
-print(f"Bagging Classifier Precision: {precision_bagging * 100:.2f}%")
-print(f"Bagging Classifier Recall: {recall_bagging * 100:.2f}%")
+# Calculate means for storing
+accuracy_bagging = cv_accuracies.mean()
+precision_bagging = cv_precisions.mean()
+recall_bagging = cv_recalls.mean()
 
+accuracies.append(test_accuracy)
+precisions.append(test_precision)
+recalls.append(test_recall)
+
+# Print and save results
+print("\nBagging Classifier Results")
+print("========================")
+print("Cross-validation Results:")
+print(f"CV Accuracy: {accuracy_bagging:.4f} ± {cv_accuracies.std():.4f}")
+print(f"CV Precision: {precision_bagging:.4f} ± {cv_precisions.std():.4f}")
+print(f"CV Recall: {recall_bagging:.4f} ± {cv_recalls.std():.4f}")
+print("\nTrain-Test Split Results:")
+print(f"Test Accuracy: {test_accuracy:.4f}")
+print(f"Test Precision: {test_precision:.4f}")
+print(f"Test Recall: {test_recall:.4f}")
+
+# Save results to file
 with open(performance_output_file, "a") as f:
-    f.write("Results\n")
-    f.write("===============================\n")
-    f.write(f"Bagging Classifier Accuracy (Rabi Crop): {accuracy_bagging * 100:.2f}% \n")
-    f.write(f"Bagging Classifier Precision: {precision_bagging * 100:.2f}% \n")
-    f.write(f"Bagging Classifier Recall: {recall_bagging * 100:.2f}% \n\n")
+    f.write("\nBagging Classifier Results\n")
+    f.write("========================\n\n")
+    f.write("Cross-validation Results:\n")
+    f.write(f"CV Accuracy: {accuracy_bagging:.4f} ± {cv_accuracies.std():.4f}\n")
+    f.write(f"CV Precision: {precision_bagging:.4f} ± {cv_precisions.std():.4f}\n")
+    f.write(f"CV Recall: {recall_bagging:.4f} ± {cv_recalls.std():.4f}\n\n")
+    f.write("Train-Test Split Results:\n")
+    f.write(f"Test Accuracy: {test_accuracy:.4f}\n")
+    f.write(f"Test Precision: {test_precision:.4f}\n")
+    f.write(f"Test Recall: {test_recall:.4f}\n\n")
 
-print("Base estimator used in Bagging Classifier:", bagging.base_estimator_)
+# Create and save a summary table
+metrics_df = pd.DataFrame({
+    'Metric': ['Accuracy', 'Precision', 'Recall'],
+    'Cross-validation': [
+        f"{accuracy_bagging:.4f} ± {cv_accuracies.std():.4f}",
+        f"{precision_bagging:.4f} ± {cv_precisions.std():.4f}",
+        f"{recall_bagging:.4f} ± {cv_recalls.std():.4f}"
+    ],
+    'Train-Test Split': [
+        f"{test_accuracy:.4f}",
+        f"{test_precision:.4f}",
+        f"{test_recall:.4f}"
+    ]
+})
 
+# Save metrics table as image
+plt.figure(figsize=(10, 4))
+ax = plt.gca()
+ax.axis('tight')
+ax.axis('off')
+table = plt.table(cellText=metrics_df.values,
+                 colLabels=metrics_df.columns,
+                 rowLabels=None,
+                 cellLoc='center',
+                 loc='center',
+                 bbox=[0, 0, 1, 1])
+table.auto_set_font_size(False)
+table.set_fontsize(9)
+table.scale(1.2, 1.5)
+plt.title("Bagging Classifier Performance Metrics Comparison")
+plt.savefig("MoreData/ResultsBordaCount/bagging_metrics_comparison.png", 
+            bbox_inches='tight', dpi=300)
+plt.close()
 
 # Prepare the output file
 results_df["Predicted_Label"] = y_pred_bagging
-output_file = "WithAgriculturalMask/ResultsBordaCount/bagging_test_results.txt"
+output_file = "MoreData/ResultsBordaCount/bagging_test_results.txt"
 correct_groups = 0
 total_groups = len(grouped_results)
 
@@ -557,6 +869,29 @@ print(f"Precision: {precision:.4f}")
 print(f"Recall: {recall:.4f}")
 
 print(f"Results saved to {output_file}")
+
+# --- Heatmap of group detection by district and year for Bagging ---
+heatmap_data_bagging = []
+for (district, seasonYear), group in grouped_results:
+    predicted_counts = group['Predicted_Label'].value_counts()
+    count_0 = predicted_counts.get(0, 0)
+    count_1 = predicted_counts.get(1, 0)
+    majority_prediction = 1 if count_1 >= count_0 else 0
+    actual_label = group['Actual_Label'].mode()[0]
+    correct = int(majority_prediction == actual_label)
+    heatmap_data_bagging.append({'District': district, 'Year': seasonYear, 'Correct': correct})
+
+heatmap_df_bagging = pd.DataFrame(heatmap_data_bagging)
+heatmap_matrix_bagging = heatmap_df_bagging.pivot(index='District', columns='Year', values='Correct')
+
+plt.figure(figsize=(10, 4))
+sns.heatmap(heatmap_matrix_bagging, annot=True, cmap='YlGnBu', cbar_kws={'label': 'Correct Group Detection (1=Correct, 0=Wrong)'})
+plt.title('Bagging Group Detection Accuracy by District and Year')
+plt.xlabel('Year')
+plt.ylabel('District')
+plt.tight_layout()
+plt.savefig("MoreData/ResultsBordaCount/group_detection_heatmap_bagging.png")
+plt.clf()
 
 # Use PermutationExplainer for the BaggingClassifier
 explainer_bagging = shap.PermutationExplainer(bagging.predict, X_test)
@@ -564,44 +899,146 @@ shap_values_bagging = explainer_bagging.shap_values(X_test)
 
 # Plot SHAP summary plot as a bar chart for feature importance
 shap.summary_plot(shap_values_bagging, X_test, plot_type="bar", feature_names=X_test.columns)
-plt.savefig("WithAgriculturalMask/ResultsBordaCount/shap_summary_bar_plot_bagging.png")  # Save bar plot to file
+plt.savefig("MoreData/ResultsBordaCount/shap_summary_bar_plot_bagging.png")  # Save bar plot to file
 plt.clf()  # Clear the current plot
 
 # Plot the full SHAP summary plot to visualize feature impact on individual predictions
 shap.summary_plot(shap_values_bagging, X_test, feature_names=X_test.columns)
-plt.savefig("WithAgriculturalMask/ResultsBordaCount/shap_summary_plot_bagging.png")  # Save beeswarm plot to file
+plt.savefig("MoreData/ResultsBordaCount/shap_summary_plot_bagging.png")  # Save beeswarm plot to file
 plt.clf()  # Clear the current plot
+
+# ROC Curve for Bagging Classifier
+y_scores_bagging = bagging.predict_proba(X_test)[:, 1]
+fpr_bagging, tpr_bagging, _ = roc_curve(y_test, y_scores_bagging)
+roc_auc_bagging = auc(fpr_bagging, tpr_bagging)
+
+# Create figure for ROC curve
+plt.figure(figsize=(10, 8))
+
+# Plot ROC curve
+plt.plot(fpr_bagging, tpr_bagging, color='darkorange', lw=2, 
+         label=f'ROC curve (AUC = {roc_auc_bagging:.2f})')
+
+# Plot diagonal line (random classifier)
+plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+
+# Customize plot
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('ROC and AUC Curves - Bagging')
+plt.legend(loc="lower right")
+
+# Add AUC score text
+plt.text(0.6, 0.2, f'AUC Score: {roc_auc_bagging:.4f}', 
+         bbox=dict(facecolor='white', alpha=0.8))
+
+# Save plot
+plt.savefig("MoreData/ResultsBordaCount/roc_auc_curve_bagging.png", 
+            bbox_inches='tight', dpi=300)
+plt.clf()
+
+# Save AUC score to performance file
+with open(performance_output_file, "a") as f:
+    f.write("\nBagging ROC-AUC Results\n")
+    f.write("=====================\n")
+    f.write(f"AUC Score: {roc_auc_bagging:.4f}\n\n")
 
 ## *****************************************************************************************************************##
 
 ### Gradient Boosting Classifier ###
 model_names.append('Gradient Boosting')
-gb = GradientBoostingClassifier(random_state=42)
+gb = GradientBoostingClassifier(n_estimators=200,random_state=42)
+
+# Train-Test Split Results
 gb.fit(X_train, y_train)
 y_pred_gb = gb.predict(X_test)
-accuracy_gb = accuracy_score(y_test, y_pred_gb)
-accuracies.append(accuracy_gb)
-print(f"Gradient Boosting Accuracy (Rabi Crop): {accuracy_gb * 100:.2f}%")
+test_accuracy = accuracy_score(y_test, y_pred_gb)
+test_precision = precision_score(y_test, y_pred_gb)
+test_recall = recall_score(y_test, y_pred_gb)
 
-# Calculate Precision and Recall for Gradient Boosting
-precision_gb = precision_score(y_test, y_pred_gb, pos_label=1)  # Use 1 for drought
-recall_gb = recall_score(y_test, y_pred_gb, pos_label=1)
+# Cross-validation Results
+cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+cv_accuracies = cross_val_score(GradientBoostingClassifier(n_estimators=200,random_state=42), 
+                               X_train, y_train, cv=cv, scoring='accuracy')
+cv_precisions = cross_val_score(GradientBoostingClassifier(n_estimators=200,random_state=42), 
+                               X_train, y_train, cv=cv, scoring='precision')
+cv_recalls = cross_val_score(GradientBoostingClassifier(n_estimators=200,random_state=42), 
+                            X_train, y_train, cv=cv, scoring='recall')
 
-precisions.append(precision_gb)
-recalls.append(recall_gb)
-print(f"Gradient Boosting Precision: {precision_gb * 100:.2f}%")
-print(f"Gradient Boosting Recall: {recall_gb * 100:.2f}%")
+# Calculate means for storing
+accuracy_gb = cv_accuracies.mean()
+precision_gb = cv_precisions.mean()
+recall_gb = cv_recalls.mean()
 
+accuracies.append(test_accuracy)
+precisions.append(test_precision)
+recalls.append(test_recall)
+
+# Print and save results
+print("\nGradient Boosting Results")
+print("========================")
+print("Cross-validation Results:")
+print(f"CV Accuracy: {accuracy_gb:.4f} ± {cv_accuracies.std():.4f}")
+print(f"CV Precision: {precision_gb:.4f} ± {cv_precisions.std():.4f}")
+print(f"CV Recall: {recall_gb:.4f} ± {cv_recalls.std():.4f}")
+print("\nTrain-Test Split Results:")
+print(f"Test Accuracy: {test_accuracy:.4f}")
+print(f"Test Precision: {test_precision:.4f}")
+print(f"Test Recall: {test_recall:.4f}")
+
+# Save results to file
 with open(performance_output_file, "a") as f:
-    f.write("Gradient Boosting Results\n")
-    f.write("===============================\n")
-    f.write(f"Gradient Boosting Accuracy (Rabi Crop): {accuracy_gb * 100:.2f}% \n")
-    f.write(f"Gradient Boosting Precision: {precision_gb * 100:.2f}% \n")
-    f.write(f"Gradient Boosting Recall: {recall_gb * 100:.2f}% \n\n")
+    f.write("\nGradient Boosting Results\n")
+    f.write("========================\n\n")
+    f.write("Cross-validation Results:\n")
+    f.write(f"CV Accuracy: {accuracy_gb:.4f} ± {cv_accuracies.std():.4f}\n")
+    f.write(f"CV Precision: {precision_gb:.4f} ± {cv_precisions.std():.4f}\n")
+    f.write(f"CV Recall: {recall_gb:.4f} ± {cv_recalls.std():.4f}\n\n")
+    f.write("Train-Test Split Results:\n")
+    f.write(f"Test Accuracy: {test_accuracy:.4f}\n")
+    f.write(f"Test Precision: {test_precision:.4f}\n")
+    f.write(f"Test Recall: {test_recall:.4f}\n\n")
 
+# Create and save a summary table
+metrics_df = pd.DataFrame({
+    'Metric': ['Accuracy', 'Precision', 'Recall'],
+    'Cross-validation': [
+        f"{accuracy_gb:.4f} ± {cv_accuracies.std():.4f}",
+        f"{precision_gb:.4f} ± {cv_precisions.std():.4f}",
+        f"{recall_gb:.4f} ± {cv_recalls.std():.4f}"
+    ],
+    'Train-Test Split': [
+        f"{test_accuracy:.4f}",
+        f"{test_precision:.4f}",
+        f"{test_recall:.4f}"
+    ]
+})
+
+# Save metrics table as image
+plt.figure(figsize=(10, 4))
+ax = plt.gca()
+ax.axis('tight')
+ax.axis('off')
+table = plt.table(cellText=metrics_df.values,
+                 colLabels=metrics_df.columns,
+                 rowLabels=None,
+                 cellLoc='center',
+                 loc='center',
+                 bbox=[0, 0, 1, 1])
+table.auto_set_font_size(False)
+table.set_fontsize(9)
+table.scale(1.2, 1.5)
+plt.title("Gradient Boosting Performance Metrics Comparison")
+plt.savefig("MoreData/ResultsBordaCount/gradient_boosting_metrics_comparison.png", 
+            bbox_inches='tight', dpi=300)
+plt.close()
+
+# Continue with existing code for SHAP values and ROC curves...
 # Prepare the output file
 results_df["Predicted_Label"] = y_pred_gb
-output_file = "WithAgriculturalMask/ResultsBordaCount/gb_test_results.txt"
+output_file = "MoreData/ResultsBordaCount/gb_test_results.txt"
 correct_groups = 0
 total_groups = len(grouped_results)
 
@@ -669,19 +1106,124 @@ print(f"Recall: {recall:.4f}")
 
 print(f"Results saved to {output_file}")
 
+# --- Heatmap of group detection by district and year for Gradient Boosting ---
+heatmap_data_gb = []
+for (district, seasonYear), group in grouped_results:
+    predicted_counts = group['Predicted_Label'].value_counts()
+    count_0 = predicted_counts.get(0, 0)
+    count_1 = predicted_counts.get(1, 0)
+    majority_prediction = 1 if count_1 >= count_0 else 0
+    actual_label = group['Actual_Label'].mode()[0]
+    correct = int(majority_prediction == actual_label)
+    heatmap_data_gb.append({'District': district, 'Year': seasonYear, 'Correct': correct})
+
+heatmap_df_gb = pd.DataFrame(heatmap_data_gb)
+heatmap_matrix_gb = heatmap_df_gb.pivot(index='District', columns='Year', values='Correct')
+
+plt.figure(figsize=(10, 4))
+sns.heatmap(heatmap_matrix_gb, annot=True, cmap='YlGnBu', cbar_kws={'label': 'Correct Group Detection (1=Correct, 0=Wrong)'})
+plt.title('Gradient Boosting Group Detection Accuracy by District and Year')
+plt.xlabel('Year')
+plt.ylabel('District')
+plt.tight_layout()
+plt.savefig("MoreData/ResultsBordaCount/group_detection_heatmap_gb.png")
+plt.clf()
+
 # SHAP Analysis for Gradient Boosting
 explainer_gb = shap.TreeExplainer(gb)
 shap_values_gb = explainer_gb.shap_values(X_test)
 
 # Save SHAP summary plot as an image file for Gradient Boosting
 shap.summary_plot(shap_values_gb, X_test, plot_type="bar", feature_names=X_test.columns)
-plt.savefig("WithAgriculturalMask/ResultsBordaCount/shap_summary_bar_plot_gb.png")  # Save plot to file
+plt.savefig("MoreData/ResultsBordaCount/shap_summary_bar_plot_gb.png")  # Save plot to file
 plt.clf()  # Clear the current plot
 
 # Save the SHAP summary plot as an image for Gradient Boosting
 shap.summary_plot(shap_values_gb, X_test, feature_names=X_test.columns)
-plt.savefig("WithAgriculturalMask/ResultsBordaCount/shap_summary_plot_gb.png")  # Save plot to file
+plt.savefig("MoreData/ResultsBordaCount/shap_summary_plot_gb.png")  # Save plot to file
 plt.clf()  # Clear the current plot
+
+# ROC Curve for Gradient Boosting
+y_scores_gb = gb.predict_proba(X_test)[:, 1]
+fpr_gb, tpr_gb, _ = roc_curve(y_test, y_scores_gb)
+roc_auc_gb = auc(fpr_gb, tpr_gb)
+
+# Create figure for ROC curve
+plt.figure(figsize=(10, 8))
+
+# Plot ROC curve
+plt.plot(fpr_gb, tpr_gb, color='darkorange', lw=2, 
+         label=f'ROC curve (AUC = {roc_auc_gb:.2f})')
+
+# Plot diagonal line (random classifier)
+plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+
+# Customize plot
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('ROC and AUC Curves - Gradient Boosting')
+plt.legend(loc="lower right")
+
+# Add AUC score text
+plt.text(0.6, 0.2, f'AUC Score: {roc_auc_gb:.4f}', 
+         bbox=dict(facecolor='white', alpha=0.8))
+
+# Save plot
+plt.savefig("MoreData/ResultsBordaCount/roc_auc_curve_gb.png", 
+            bbox_inches='tight', dpi=300)
+plt.clf()
+
+# Save AUC score to performance file
+with open(performance_output_file, "a") as f:
+    f.write("\nGradient Boosting ROC-AUC Results\n")
+    f.write("==============================\n")
+    f.write(f"AUC Score: {roc_auc_gb:.4f}\n\n")
+
+## *****************************************************************************************************************##
+
+# Combined ROC Curve for all models
+plt.figure(figsize=(12, 8))
+
+# Plot ROC curves for each model with different colors
+plt.plot(fpr_xgb, tpr_xgb, color='darkorange', lw=2, 
+         label=f'XGBoost (AUC = {roc_auc_xgb:.4f})')
+plt.plot(fpr_rf, tpr_rf, color='forestgreen', lw=2, 
+         label=f'Random Forest (AUC = {roc_auc_rf:.4f})')
+plt.plot(fpr_bagging, tpr_bagging, color='royalblue', lw=2, 
+         label=f'Bagging (AUC = {roc_auc_bagging:.4f})')
+plt.plot(fpr_gb, tpr_gb, color='darkred', lw=2, 
+         label=f'Gradient Boosting (AUC = {roc_auc_gb:.4f})')
+
+# Plot diagonal reference line
+plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--', label='Random')
+
+# Customize plot
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Comparison of ROC Curves for All Models')
+plt.legend(loc='lower right', bbox_to_anchor=(1.0, 0.0))
+
+# Add grid for better readability
+plt.grid(True, linestyle='--', alpha=0.7)
+
+# Save plot with higher resolution
+plt.savefig("MoreData/ResultsBordaCount/combined_roc_curves.png", 
+            bbox_inches='tight', dpi=300)
+plt.clf()
+
+# Save AUC scores comparison to performance file
+with open(performance_output_file, "a") as f:
+    f.write("\nROC-AUC Comparison for All Models\n")
+    f.write("================================\n")
+    f.write(f"XGBoost AUC Score: {roc_auc_xgb:.4f}\n")
+    f.write(f"Random Forest AUC Score: {roc_auc_rf:.4f}\n")
+    f.write(f"Bagging AUC Score: {roc_auc_bagging:.4f}\n")
+    f.write(f"Gradient Boosting AUC Score: {roc_auc_gb:.4f}\n\n")
+
 ## *****************************************************************************************************************##
 # Create a DataFrame with the metrics
 metrics_df1 = pd.DataFrame({
@@ -698,7 +1240,7 @@ ax.axis('off')
 table = ax.table(cellText=metrics_df1.values, colLabels=metrics_df1.columns, cellLoc='center', loc='center')
 
 # Save the table as a PNG image
-plt.savefig('WithAgriculturalMask/ResultsBordaCount/model_performance_table.png')
+plt.savefig('MoreData/ResultsBordaCount/model_performance_table.png')
 plt.clf()  # Clear the current plot
 ## *****************************************************************************************************************##
 
@@ -750,60 +1292,130 @@ plt.gca().invert_yaxis()  # Invert the y-axis to display the top feature on top
 plt.tight_layout()
 
 # Save the plot
-plt.savefig("WithAgriculturalMask/ResultsBordaCount/top_5_features_borda_count.png")
+plt.savefig("MoreData/ResultsBordaCount/top_5_features_borda_count.png")
 plt.clf()  # Clear the plot
+
+top_5_features_list = borda_df.head(5)['Feature'].tolist()
 
 ## *****************************************************************************************************************##
 
-# Function to evaluate the models using top features
 def evaluate_model_with_top_features(model, X_train, X_test, y_train, y_test, top_features):
-    # Use only the top features for training and testing
+    """
+    Evaluate model using both cross-validation and train-test split with top features
+    """
+    # Use only the top features
     X_train_top = X_train[top_features]
     X_test_top = X_test[top_features]
     
-    # Fit the model
-    model.fit(X_train_top, y_train)
-    
-    # Predict and calculate metrics
-    y_pred = model.predict(X_test_top)
-    
-    accuracy = round(accuracy_score(y_test, y_pred), 4) 
-    precision = round(precision_score(y_test, y_pred, pos_label=1), 4)   # 1 for drought
-    recall = round(recall_score(y_test, y_pred, pos_label=1), 4)
-    
-    return accuracy, precision, recall
+    # Cross-validation Results
+    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+    acc_scores = cross_val_score(model, X_train_top, y_train, cv=cv, scoring='accuracy')
+    prec_scores = cross_val_score(model, X_train_top, y_train, cv=cv, scoring='precision')
+    rec_scores = cross_val_score(model, X_train_top, y_train, cv=cv, scoring='recall')
 
-# Get the top 5 features from the Borda Count
-top_5_features_list = borda_df['Feature'].head(5).tolist()
+    # Train-Test Split Results
+    model.fit(X_train_top, y_train)
+    y_pred = model.predict(X_test_top)
+    test_accuracy = accuracy_score(y_test, y_pred)
+    test_precision = precision_score(y_test, y_pred)
+    test_recall = recall_score(y_test, y_pred)
+
+    # Return both CV and Test results
+    results = {
+        'cv_accuracy': f"{acc_scores.mean():.4f} ± {acc_scores.std():.4f}",
+        'cv_precision': f"{prec_scores.mean():.4f} ± {prec_scores.std():.4f}",
+        'cv_recall': f"{rec_scores.mean():.4f} ± {rec_scores.std():.4f}",
+        'test_accuracy': f"{test_accuracy:.4f}",
+        'test_precision': f"{test_precision:.4f}",
+        'test_recall': f"{test_recall:.4f}"
+    }
+    
+    return results
 
 # Evaluate each model using the top 1 to top 5 features
 metrics = {}
+for model_name, model in {
+    'XGBoost': xgb_model,
+    'Random Forest': rf,
+    'Bagging': bagging,
+    'Gradient Boosting': gb
+}.items():
+    metrics[model_name] = []
+    for i in range(1, 6):
+        top_features = top_5_features_list[:i]
+        results = evaluate_model_with_top_features(
+            model, X_train, X_test, y_train, y_test, top_features
+        )
+        metrics[model_name].append(results)
 
-# XGBoost
-metrics['XGBoost'] = [evaluate_model_with_top_features(xgb_model, X_train, X_test, y_train, y_test, top_5_features_list[:i]) for i in range(1, 6)]
+# Create separate DataFrames for CV and Test results
+cv_results = pd.DataFrame(columns=['Model', 'Features', 'Accuracy', 'Precision', 'Recall'])
+test_results = pd.DataFrame(columns=['Model', 'Features', 'Accuracy', 'Precision', 'Recall'])
 
-# Random Forest
-metrics['Random Forest'] = [evaluate_model_with_top_features(rf, X_train, X_test, y_train, y_test, top_5_features_list[:i]) for i in range(1, 6)]
+for model_name in metrics:
+    for i, result in enumerate(metrics[model_name], 1):
+        # For CV results
+        cv_results = pd.concat([cv_results, pd.DataFrame([{
+            'Model': model_name,
+            'Features': f'Top {i}',
+            'Accuracy': result['cv_accuracy'],
+            'Precision': result['cv_precision'],
+            'Recall': result['cv_recall']
+        }])], ignore_index=True)
+        
+        # For Test results
+        test_results = pd.concat([test_results, pd.DataFrame([{
+            'Model': model_name,
+            'Features': f'Top {i}',
+            'Accuracy': result['test_accuracy'],
+            'Precision': result['test_precision'],
+            'Recall': result['test_recall']
+        }])], ignore_index=True)
 
-# Bagging
-metrics['Bagging'] = [evaluate_model_with_top_features(bagging, X_train, X_test, y_train, y_test, top_5_features_list[:i]) for i in range(1, 6)]
+# Save results to file and create visualizations
+with open("MoreData/ResultsBordaCount/top_features_performance.txt", "w") as f:
+    f.write("Cross-validation Results\n")
+    f.write("=======================\n")
+    f.write(cv_results.to_string())
+    f.write("\n\nTest Set Results\n")
+    f.write("================\n")
+    f.write(test_results.to_string())
 
-# Gradient Boosting
-metrics['Gradient Boosting'] = [evaluate_model_with_top_features(gb, X_train, X_test, y_train, y_test, top_5_features_list[:i]) for i in range(1, 6)]
+# Create and save visualization for CV results
+plt.figure(figsize=(15, 8))
+ax = plt.gca()
+ax.axis('tight')
+ax.axis('off')
+cv_table = plt.table(cellText=cv_results.values,
+                    colLabels=cv_results.columns,
+                    cellLoc='center',
+                    loc='center',
+                    bbox=[0, 0, 1, 1])
+cv_table.auto_set_font_size(False)
+cv_table.set_fontsize(9)
+cv_table.scale(1.2, 1.5)
+plt.title("Cross-validation Performance with Top Features")
+plt.savefig("MoreData/ResultsBordaCount/cv_performance_top_features.png", 
+            bbox_inches='tight', dpi=300)
+plt.close()
 
-# Create a DataFrame to display the metrics
-metrics_df = pd.DataFrame(metrics, index=["Top 1", "Top 2", "Top 3", "Top 4", "Top 5"])
-
-# Save the table to an image
-plt.figure(figsize=(12, 6))
-plt.axis('off')
-plt.table(cellText=metrics_df.values, colLabels=metrics_df.columns, rowLabels=metrics_df.index, loc='center', cellLoc='center', bbox=[0, 0, 1, 1])
-plt.tight_layout()
-plt.savefig("WithAgriculturalMask/ResultsBordaCount/model_metrics_top_features_borda_count.png")
-plt.clf()
-
-# Print the metrics for verification
-print(metrics_df)
+# Create and save visualization for Test results
+plt.figure(figsize=(15, 8))
+ax = plt.gca()
+ax.axis('tight')
+ax.axis('off')
+test_table = plt.table(cellText=test_results.values,
+                      colLabels=test_results.columns,
+                      cellLoc='center',
+                      loc='center',
+                      bbox=[0, 0, 1, 1])
+test_table.auto_set_font_size(False)
+test_table.set_fontsize(9)
+test_table.scale(1.2, 1.5)
+plt.title("Test Set Performance with Top Features")
+plt.savefig("MoreData/ResultsBordaCount/test_performance_top_features.png", 
+            bbox_inches='tight', dpi=300)
+plt.close()
 
 ## *****************************************************************************************************************##
 ## Error Analysis with confusion matrix
@@ -825,7 +1437,7 @@ def plot_confusion_matrix(y_true, y_pred, model_name):
     plt.xlabel('Predicted')
     plt.ylabel('True')
     plt.tight_layout()
-    plt.savefig(f"WithAgriculturalMask/ResultsBordaCount/confusion_matrix_{model_name.lower().replace(' ', '_')}.png")  # Save confusion matrix as an image
+    plt.savefig(f"MoreData/ResultsBordaCount/confusion_matrix_{model_name.lower().replace(' ', '_')}.png")  # Save confusion matrix as an image
     plt.clf()  # Clear the current plot
 
 # Evaluate and perform error analysis for each model
