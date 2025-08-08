@@ -1,0 +1,47 @@
+Cross-validation Results
+=======================
+                Model Features         Accuracy        Precision           Recall
+0             XGBoost    Top 1  0.5965 ± 0.0086  0.5390 ± 0.0146  0.3575 ± 0.0392
+1             XGBoost    Top 2  0.6857 ± 0.0096  0.6448 ± 0.0121  0.5811 ± 0.0188
+2             XGBoost    Top 3  0.7463 ± 0.0121  0.7181 ± 0.0125  0.6639 ± 0.0236
+3             XGBoost    Top 4  0.7992 ± 0.0148  0.7829 ± 0.0255  0.7315 ± 0.0243
+4             XGBoost    Top 5  0.8195 ± 0.0092  0.8064 ± 0.0137  0.7578 ± 0.0173
+5       Random Forest    Top 1  0.5599 ± 0.0113  0.4821 ± 0.0140  0.4817 ± 0.0238
+6       Random Forest    Top 2  0.6838 ± 0.0078  0.6389 ± 0.0113  0.5904 ± 0.0187
+7       Random Forest    Top 3  0.7513 ± 0.0080  0.7309 ± 0.0098  0.6570 ± 0.0118
+8       Random Forest    Top 4  0.8005 ± 0.0151  0.7868 ± 0.0146  0.7278 ± 0.0273
+9       Random Forest    Top 5  0.8197 ± 0.0093  0.8125 ± 0.0111  0.7488 ± 0.0171
+10            Bagging    Top 1  0.5599 ± 0.0113  0.4821 ± 0.0140  0.4817 ± 0.0238
+11            Bagging    Top 2  0.6681 ± 0.0105  0.6183 ± 0.0138  0.5739 ± 0.0163
+12            Bagging    Top 3  0.7390 ± 0.0054  0.7095 ± 0.0059  0.6539 ± 0.0120
+13            Bagging    Top 4  0.8047 ± 0.0126  0.7943 ± 0.0136  0.7298 ± 0.0266
+14            Bagging    Top 5  0.8185 ± 0.0089  0.8081 ± 0.0156  0.7523 ± 0.0165
+15  Gradient Boosting    Top 1  0.5974 ± 0.0064  0.5483 ± 0.0145  0.3033 ± 0.0147
+16  Gradient Boosting    Top 2  0.6426 ± 0.0105  0.6445 ± 0.0163  0.3544 ± 0.0255
+17  Gradient Boosting    Top 3  0.6756 ± 0.0069  0.6605 ± 0.0114  0.4879 ± 0.0102
+18  Gradient Boosting    Top 4  0.7039 ± 0.0103  0.6900 ± 0.0122  0.5511 ± 0.0207
+19  Gradient Boosting    Top 5  0.7261 ± 0.0050  0.7238 ± 0.0067  0.5752 ± 0.0090
+
+Test Set Results
+================
+                Model Features Accuracy Precision  Recall
+0             XGBoost    Top 1   0.6015    0.5204  0.3300
+1             XGBoost    Top 2   0.6854    0.6292  0.5624
+2             XGBoost    Top 3   0.7441    0.6986  0.6585
+3             XGBoost    Top 4   0.8104    0.7895  0.7317
+4             XGBoost    Top 5   0.8345    0.8120  0.7747
+5       Random Forest    Top 1   0.5452    0.4470  0.4720
+6       Random Forest    Top 2   0.6884    0.6258  0.5925
+7       Random Forest    Top 3   0.7664    0.7325  0.6758
+8       Random Forest    Top 4   0.8075    0.7869  0.7260
+9       Random Forest    Top 5   0.8351    0.8210  0.7633
+10            Bagging    Top 1   0.5452    0.4470  0.4720
+11            Bagging    Top 2   0.6737    0.6060  0.5782
+12            Bagging    Top 3   0.7523    0.7106  0.6657
+13            Bagging    Top 4   0.8104    0.7799  0.7475
+14            Bagging    Top 5   0.8298    0.8107  0.7618
+15  Gradient Boosting    Top 1   0.5939    0.5065  0.2812
+16  Gradient Boosting    Top 2   0.6485    0.6324  0.3357
+17  Gradient Boosting    Top 3   0.6696    0.6309  0.4634
+18  Gradient Boosting    Top 4   0.7031    0.6792  0.5194
+19  Gradient Boosting    Top 5   0.7224    0.6972  0.5681

@@ -1,0 +1,127 @@
+XGBoost Results
+================
+
+Cross-validation Results:
+CV Accuracy: 0.8550 ± 0.0052
+CV Precision: 0.8462 ± 0.0093
+CV Recall: 0.8721 ± 0.0179
+
+Train-Test Split Results:
+Test Accuracy: 0.8521
+Test Precision: 0.7947
+Test Recall: 0.8608
+
+Overall Group Detection Results
+===============================
+Total Groups: 30
+Correctly Detected Groups: 30
+Accuracy: 1.0000
+Precision: 1.0000
+Recall: 1.0000
+
+
+XGBoost ROC-AUC Results
+=====================
+AUC Score: 0.9232
+
+
+Random Forest Results
+====================
+
+Cross-validation Results:
+CV Accuracy: 0.8355 ± 0.0088
+CV Precision: 0.8220 ± 0.0088
+CV Recall: 0.8616 ± 0.0207
+
+Train-Test Split Results:
+Test Accuracy: 0.8333
+Test Precision: 0.7779
+Test Recall: 0.8293
+
+Overall Group Detection Results
+===============================
+Total Groups: 30
+Correctly Detected Groups: 29
+Accuracy: 0.9667
+Precision: 0.9667
+Recall: 0.9667
+
+
+Random Forest ROC-AUC Results
+===========================
+AUC Score: 0.9089
+
+
+Bagging Classifier Results
+========================
+
+Cross-validation Results:
+CV Accuracy: 0.8396 ± 0.0074
+CV Precision: 0.8264 ± 0.0067
+CV Recall: 0.8646 ± 0.0155
+
+Train-Test Split Results:
+Test Accuracy: 0.8492
+Test Precision: 0.7926
+Test Recall: 0.8551
+
+Overall Group Detection Results
+===============================
+Total Groups: 30
+Correctly Detected Groups: 29
+Accuracy: 0.9667
+Precision: 0.9667
+Recall: 0.9667
+
+
+Bagging ROC-AUC Results
+=====================
+AUC Score: 0.9215
+
+
+Gradient Boosting Results
+========================
+
+Cross-validation Results:
+CV Accuracy: 0.7375 ± 0.0119
+CV Precision: 0.7297 ± 0.0114
+CV Recall: 0.7644 ± 0.0185
+
+Train-Test Split Results:
+Test Accuracy: 0.7306
+Test Precision: 0.6455
+Test Recall: 0.7575
+
+Overall Group Detection Results
+===============================
+Total Groups: 30
+Correctly Detected Groups: 26
+Accuracy: 0.8667
+Precision: 0.8667
+Recall: 0.8667
+
+
+Gradient Boosting ROC-AUC Results
+==============================
+AUC Score: 0.8090
+
+
+ROC-AUC Comparison for All Models
+================================
+XGBoost AUC Score: 0.9232
+Random Forest AUC Score: 0.9089
+Bagging AUC Score: 0.9215
+Gradient Boosting AUC Score: 0.8090
+
+Confusion Matrix for XGBoost:
+[[852 155]
+ [ 97 600]]
+Confusion Matrix for Random Forest:
+[[842 165]
+ [119 578]]
+Confusion Matrix for Bagging:
+[[851 156]
+ [101 596]]
+Confusion Matrix for Gradient Boosting:
+[[717 290]
+ [169 528]]
